@@ -1,0 +1,25 @@
+{
+    "empresa": "Fabrica_Tijolos_Eco",
+    "planta": {
+        "PE_Recife": {
+            "linha_1": {
+                "maquina_1": {
+                    "sensores": {
+                        "pressao": "Fabrica/PE_Recife/Linha1/Maquina1/Sensores/Pressao",
+                        "umidade": "Fabrica/PE_Recife/Linha1/Maquina1/Sensores/Umidade",
+                        "temp": "Fabrica/PE_Recife/Linha1/Maquina1/Sensores/Temperatura"
+                    },
+                    "eventos": "Fabrica/PE_Recife/Linha1/Maquina1/Eventos"
+                },
+                "maquina_2": {
+                    "sensores": {
+                        "pressao": "Fabrica/PE_Recife/Linha1/Maquina2/Sensores/Pressao",
+                        "umidade": "Fabrica/PE_Recife/Linha1/Maquina2/Sensores/Umidade",
+                        "temp": "Fabrica/PE_Recife/Linha1/Maquina2/Sensores/Temperatura"
+                    },
+                    "eventos": "Fabrica/PE_Recife/Linha1/Maquina2/Eventos"
+                }
+            }
+        }
+    }
+}
