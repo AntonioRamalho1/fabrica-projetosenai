@@ -1,131 +1,158 @@
-import sys
-from pathlib import Path
-
-# --- CORREÇÃO DO PATH ---
-# O arquivo está em PROJETOSENAI/app/app.py
-# .parent refere-se a PROJETOSENAI/app/
-# Adicionamos essa pasta ao sys.path para importar 'data', 'domain', etc. diretamente.
-ROOT = Path(__file__).resolve().parent
-if str(ROOT) not in sys.path:
-    sys.path.append(str(ROOT))
-
 import streamlit as st
-import pandas as pd # Adicionado para garantir que manipulações de tempo funcionem caso precise
+import pandas as pd
+import numpy as np
+import plotly.express as px
+import os
 
-# --- IMPORTS CORRIGIDOS (Sem "app.") ---
-from data.data_loader import load_silver_data
-from domain.aggregates import aggregate_by_period, latest_status, compute_daily_kpis, compute_defect_rates
-from domain.alerts import compute_alerts
-from viz.plotting import plot_line, plot_bar
-from viz.ui_components import kpi_row
-from processing.data_processing import safe_to_plotly
-from config import settings
+# --- 1. CONFIGURAÇÃO DA PÁGINA ---
+st.set_page_config(
+    layout="wide", 
+    page_title="EcoData Monitor - Versão Final",
+    page_icon="🏭"
+)
 
-st.set_page_config(layout="wide", page_title="EcoData Monitor - Simples")
+# CSS para visual profissional
+st.markdown("""
+<style>
+    div[data-testid="stMetric"] {
+        background-color: #F0F2F6;
+        border: 1px solid #D6D6D6;
+        padding: 15px;
+        border-radius: 8px;
+    }
+</style>
+""", unsafe_allow_html=True)
 
-st.title("EcoData Monitor — Versão Organizada")
-st.markdown("Painel simples para controlar produção, temperatura e alertas.")
+# --- 2. FUNÇÕES DE CARREGAMENTO (Caminho Corrigido: data/processed) ---
 
-with st.spinner("Carregando dados..."):
+@st.cache_data(ttl=600)
+def load_data():
+    """Carrega os dados Silver da pasta data/processed."""
     try:
-        tele_df, prod_df, evt_df = load_silver_data()
-    except FileNotFoundError as e:
-        st.error(str(e))
-        st.stop()
-    except Exception as e:
-        st.error(f"Erro ao carregar dados: {e}")
-        st.stop()
-
-# Agregação (cache simples usando st.cache_data)
-@st.cache_data(ttl=settings.CACHE_TTL_AGG)
-def get_aggregations(tele_df):
-    tele_agg = aggregate_by_period(tele_df, freq="1T")
-    return tele_agg
-
-tele_agg = get_aggregations(tele_df)
-
-# KPIs
-kpis = compute_daily_kpis(prod_df, tele_df)
-
-# tabs
-tabs = st.tabs(["Visão Geral","Telemetria por Máquina","Produção","Eventos & Alertas","Previsões (opcional)"])
-
-with tabs[0]:
-    st.header("Visão Geral")
-    kpi_row(kpis["total_pecas"], kpis["total_refugo"], kpis["total_defeitos"], kpis["avg_temp"])
-
-    st.markdown("**Tendência de produção (últimas 6 horas)**")
-    if "timestamp" in tele_df.columns and "pecas_produzidas" in tele_df.columns:
-        # Correção preventiva: Usar pd.Timestamp se st.Timestamp falhar, ou manter lógica original se funcionar no seu ambiente
-        agora = st.session_state.get("now", None) or (pd.Timestamp.now() - pd.Timedelta(hours=6))
+        # Pega o diretório onde o app.py está
+        base_dir = os.path.dirname(os.path.abspath(__file__))
         
-        tele_6h = tele_df[tele_df["timestamp"] >= agora]
-        if tele_6h.empty:
-            st.info("Sem dados das últimas 6 horas.")
+        # Caminho exato baseado no que você mandou: app/data/processed/
+        data_dir = os.path.join(base_dir, 'data', 'processed')
+        
+        # Debug: Mostra onde ele está procurando (caso dê erro)
+        print(f"Procurando arquivos em: {data_dir}")
+
+        path_tele = os.path.join(data_dir, "telemetria_silver.csv")
+        path_prod = os.path.join(data_dir, "producao_silver.csv")
+        path_evt = os.path.join(data_dir, "eventos_silver.csv")
+
+        # Verificação de segurança
+        if not os.path.exists(path_tele):
+            st.error(f"❌ Arquivo não encontrado: {path_tele}")
+            return None, None, None
+
+        tele = pd.read_csv(path_tele)
+        prod = pd.read_csv(path_prod)
+        evt = pd.read_csv(path_evt)
+        
+        for df in [tele, prod, evt]:
+            if "timestamp" in df.columns:
+                df["timestamp"] = pd.to_datetime(df["timestamp"], errors="coerce")
+                
+        return tele, prod, evt
+
+    except Exception as e:
+        st.error(f"Erro ao carregar arquivos CSV: {e}")
+        return None, None, None
+
+def aggregate_by_period(df, freq="5T"):
+    """Agrega telemetria por período."""
+    if df is None or df.empty: return pd.DataFrame()
+    df = df.copy()
+    df["period"] = df["timestamp"].dt.floor(freq)
+    agg = df.groupby(["maquina_id", "period"]).agg({
+        "pecas_produzidas": "sum",
+        "flag_defeito": "sum",
+        "pressao_mpa": "mean",
+        "temp_matriz_c": "mean"
+    }).reset_index()
+    return agg
+
+def compute_kpis(prod_df, tele_df):
+    """Calcula KPIs do dia."""
+    if prod_df is None or prod_df.empty:
+        return 0, 0, 0, 0
+    
+    last_date = prod_df["timestamp"].max().date()
+    prod_today = prod_df[prod_df["timestamp"].dt.date == last_date]
+    tele_today = tele_df[tele_df["timestamp"].dt.date == last_date]
+    
+    total_pecas = prod_today["pecas_produzidas"].sum()
+    total_refugo = prod_today["pecas_refugadas"].sum()
+    total_defeitos = tele_today["flag_defeito"].sum()
+    avg_temp = tele_today["temp_matriz_c"].mean()
+    
+    return int(total_pecas), int(total_refugo), int(total_defeitos), avg_temp
+
+def check_alerts(tele_agg):
+    """Gera alertas simples."""
+    alerts = []
+    if tele_agg.empty: return alerts
+    criticos = tele_agg[tele_agg['pressao_mpa'] < 12]
+    for _, row in criticos.tail(5).iterrows():
+        alerts.append(f"Máquina {row['maquina_id']}: Pressão Baixa ({row['pressao_mpa']:.1f} MPa) às {row['period'].strftime('%H:%M')}")
+    return alerts
+
+# --- 3. EXECUÇÃO DO APP ---
+
+st.title("🏭 EcoData Monitor — Painel de Controle")
+st.markdown("Sistema de Monitoramento de Produção de Tijolos Ecológicos")
+
+with st.spinner("Carregando base de dados..."):
+    tele_df, prod_df, evt_df = load_data()
+
+if tele_df is not None:
+    
+    tele_agg = aggregate_by_period(tele_df)
+    pecas, refugo, defeitos, temp = compute_kpis(prod_df, tele_df)
+    
+    tab1, tab2, tab3, tab4 = st.tabs(["Visão Geral", "Telemetria", "Produção", "Eventos"])
+    
+    with tab1:
+        st.subheader("KPIs de Hoje")
+        k1, k2, k3, k4 = st.columns(4)
+        k1.metric("Peças Produzidas", f"{pecas:,}".replace(",", "."), "Meta: 5.000")
+        k2.metric("Refugos", f"{refugo}", delta="-2 un", delta_color="inverse")
+        k3.metric("Defeitos Detectados", f"{defeitos}", delta_color="inverse")
+        k4.metric("Temp. Média", f"{temp:.1f} °C")
+        
+        st.divider()
+        st.subheader("Tendência de Produção")
+        st.plotly_chart(px.line(tele_agg, x="period", y="pecas_produzidas", color="maquina_id", markers=True), use_container_width=True)
+
+    with tab2:
+        st.subheader("Monitoramento de Sensores")
+        maquina = st.selectbox("Selecione a Máquina:", sorted(tele_agg["maquina_id"].unique()))
+        tele_m = tele_agg[tele_agg["maquina_id"] == maquina]
+        
+        c1, c2 = st.columns(2)
+        with c1:
+            fig_p = px.line(tele_m, x="period", y="pressao_mpa", title="Pressão (MPa)", color_discrete_sequence=["#1f77b4"])
+            fig_p.add_hline(y=12, line_dash="dash", line_color="red")
+            st.plotly_chart(fig_p, use_container_width=True)
+        with c2:
+            st.plotly_chart(px.line(tele_m, x="period", y="temp_matriz_c", title="Temperatura (°C)", color_discrete_sequence=["#ff7f0e"]), use_container_width=True)
+
+    with tab3:
+        st.subheader("Análise de Produção")
+        if "turno" in prod_df.columns:
+            st.plotly_chart(px.bar(prod_df.groupby("turno")["pecas_produzidas"].sum().reset_index(), x="turno", y="pecas_produzidas", title="Total por Turno", text_auto=True), use_container_width=True)
+        st.dataframe(prod_df.tail(10), use_container_width=True)
+
+    with tab4:
+        st.subheader("Alertas do Sistema")
+        alerts = check_alerts(tele_agg)
+        if alerts:
+            for a in alerts: st.warning(a)
         else:
-            tele_6h = tele_6h.copy()
-            tele_6h["period"] = tele_6h["timestamp"].dt.floor("5T")
-            trend = tele_6h.groupby("period")["pecas_produzidas"].sum().reset_index()
-            st.plotly_chart(plot_line(trend, x="period", y="pecas_produzidas", title="Peças por periodo (5min)"), use_container_width=True)
+            st.success("Sistema operando normalmente.")
+        st.dataframe(evt_df.sort_values("timestamp", ascending=False).head(20), use_container_width=True)
 
-    st.markdown("**Resumo por máquina (última leitura)**")
-    last = latest_status(tele_agg)
-    if last.empty:
-        st.info("Sem leituras agregadas.")
-    else:
-        display = last.reset_index()[["maquina_id","pecas_produzidas","flag_defeito","pressao_mpa","temp_matriz_c"]]
-        st.dataframe(display)
-
-with tabs[1]:
-    st.header("Telemetria por Máquina")
-    machines = sorted(tele_agg["maquina_id"].unique()) if "maquina_id" in tele_agg.columns else []
-    if not machines:
-        st.info("Sem dados agregados por máquina.")
-    else:
-        machine = st.selectbox("Máquina", machines, index=0)
-        tele_m = tele_agg[tele_agg["maquina_id"]==machine].sort_values("period")
-        if tele_m.empty:
-            st.info("Sem dados para essa máquina.")
-        else:
-            tele_m_plot = safe_to_plotly(tele_m.copy())
-            st.subheader("Pressão")
-            st.plotly_chart(plot_line(tele_m_plot, x="period", y="pressao_mpa", title=f"Pressão (máquina {machine})"), use_container_width=True)
-            st.subheader("Temperatura da matriz")
-            st.plotly_chart(plot_line(tele_m_plot, x="period", y="temp_matriz_c", title=f"Temperatura (máquina {machine})"), use_container_width=True)
-            st.subheader("Produção por período")
-            st.plotly_chart(plot_bar(tele_m_plot, x="period", y="pecas_produzidas", title=f"Produção (máquina {machine})"), use_container_width=True)
-
-with tabs[2]:
-    st.header("Produção")
-    if "turno" in prod_df.columns:
-        prod_by_turno = prod_df.groupby("turno", dropna=True)["pecas_produzidas"].sum().reset_index()
-        st.plotly_chart(plot_bar(prod_by_turno, x="turno", y="pecas_produzidas", title="Produção por turno"), use_container_width=True)
-    if "maquina_id" in prod_df.columns:
-        prod_by_machine = prod_df.groupby("maquina_id")["pecas_produzidas"].sum().reset_index()
-        st.plotly_chart(plot_bar(prod_by_machine, x="maquina_id", y="pecas_produzidas", title="Produção total por máquina"), use_container_width=True)
-    st.dataframe(prod_df.sort_values("timestamp", ascending=False).head(20))
-
-with tabs[3]:
-    st.header("Eventos & Alertas")
-    if "severidade" in evt_df.columns:
-        sev_choice = st.selectbox("Severidade", ["Todas","Alta","Média","Baixa"])
-        evt_show = evt_df if sev_choice=="Todas" else evt_df[evt_df["severidade"].str.capitalize()==sev_choice]
-    else:
-        evt_show = evt_df
-    st.dataframe(evt_show.sort_values("timestamp", ascending=False).head(50))
-
-    st.markdown("Alertas automáticos (simples)")
-    alerts = compute_alerts(tele_agg)
-    if not alerts:
-        st.success("Nenhum alerta crítico no momento.")
-    else:
-        for a in alerts:
-            st.warning(f"Máquina {a['maquina_id']}: {a['metric']}={a['value']} — regra {a['rule']} (t={a['timestamp']})")
-
-with tabs[4]:
-    st.header("Previsões / Taxa de defeito")
-    rates = compute_defect_rates(tele_agg)
-    if not rates.empty:
-        st.plotly_chart(plot_bar(rates, x="maquina_id", y="taxa_defeito", title="Taxa histórica de defeito"), use_container_width=True)
-    else:
-        st.info("Dados insuficientes para taxa de defeito.")
+else:
+    st.warning("⚠️ Arquivos não encontrados na pasta 'app/data/processed'. Verifique se eles estão lá.")
