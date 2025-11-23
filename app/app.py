@@ -1,16 +1,16 @@
-# app.py — App completo, formatado e pronto para rodar localmente
-# Observação: este app usa os CSVs em: app/data/processed/
-# Uploads disponíveis durante o desenvolvimento (informativo):
-# /mnt/data/telemetria_detalhada_30dias.csv
-# /mnt/data/historico_producao_1ano.csv
-# /mnt/data/eventos_industriais.csv
-
 import streamlit as st
 import pandas as pd
 import numpy as np
 import plotly.express as px
 import os
 from textwrap import dedent
+from domain.kpis import (
+    aggregate_by_period, compute_kpis, check_alerts, 
+    compute_refugo_by_turno, pareto_paradas, 
+    build_pressure_humidity_scatter, aggregate_events,
+    compute_oee_kpis, compute_energy_cost
+)
+from ml.predictor import predict_defeito_prob
 
 # ---------------------------
 # 0. CONFIGURAÇÕES GLOBAIS
@@ -48,8 +48,7 @@ def load_data():
         missing = [p for p in [tele_path, prod_path, evt_path] if not os.path.exists(p)]
         if missing:
             raise FileNotFoundError(
-                "Arquivos faltando: " + ", ".join([os.path.basename(m) for m in missing]) +
-                f". Coloque-os em: {data_dir}"
+                f"Arquivos faltando: {', '.join([os.path.basename(m) for m in missing])}. Coloque-os em: {data_dir}"
             )
 
         tele = pd.read_csv(tele_path)
@@ -67,130 +66,8 @@ def load_data():
         st.error(f"Erro ao carregar dados: {e}")
         return None, None, None
 
-
 # ---------------------------
-# 2. FUNÇÕES AUXILIARES / CÁLCULOS
-# ---------------------------
-def aggregate_by_period(df, freq="5T"):
-    if df is None or df.empty or "timestamp" not in df.columns:
-        return pd.DataFrame()
-    d = df.copy()
-    d["period"] = d["timestamp"].dt.floor(freq)
-    agg = d.groupby(["maquina_id", "period"]).agg({
-        "pecas_produzidas": "sum" if "pecas_produzidas" in d.columns else "count",
-        "flag_defeito": "sum" if "flag_defeito" in d.columns else 0,
-        "pressao_mpa": "mean" if "pressao_mpa" in d.columns else np.nan,
-        "temp_matriz_c": "mean" if "temp_matriz_c" in d.columns else np.nan
-    }).reset_index()
-    return agg
-
-
-def compute_kpis(prod_df, tele_df):
-    if prod_df is None or prod_df.empty:
-        return 0, 0, 0, np.nan
-    # determinar último dia com produção
-    if "timestamp" in prod_df.columns:
-        last_date = prod_df["timestamp"].max().date()
-        prod_today = prod_df[prod_df["timestamp"].dt.date == last_date]
-    else:
-        prod_today = prod_df
-    total_pecas = int(prod_today["pecas_produzidas"].sum()) if "pecas_produzidas" in prod_today.columns else len(prod_today)
-    total_refugo = int(prod_today["pecas_refugadas"].sum()) if "pecas_refugadas" in prod_today.columns else 0
-
-    total_defeitos = 0
-    avg_temp = np.nan
-    if tele_df is not None and not tele_df.empty and "timestamp" in tele_df.columns:
-        tele_today = tele_df[tele_df["timestamp"].dt.date == last_date]
-        if "flag_defeito" in tele_today.columns:
-            total_defeitos = int(tele_today["flag_defeito"].sum())
-        if "temp_matriz_c" in tele_today.columns:
-            avg_temp = tele_today["temp_matriz_c"].mean()
-    return total_pecas, total_refugo, total_defeitos, avg_temp
-
-
-def check_alerts(tele_agg):
-    alerts = []
-    if tele_agg is None or tele_agg.empty:
-        return alerts
-    crit = tele_agg[tele_agg["pressao_mpa"] < 12]
-    for _, r in crit.tail(5).iterrows():
-        alerts.append(f"Máquina {r['maquina_id']}: Pressão Baixa ({r['pressao_mpa']:.1f} MPa) às {r['period'].strftime('%H:%M')}")
-    return alerts
-
-
-def compute_refugo_by_turno(prod_df):
-    if prod_df is None or prod_df.empty or "turno" not in prod_df.columns:
-        return pd.DataFrame()
-    grp = prod_df.groupby("turno").agg({"pecas_produzidas": "sum", "pecas_refugadas": "sum"}).reset_index().rename(columns={"pecas_refugadas": "refugos"})
-    grp["pct_refugo"] = (grp["refugos"] / grp["pecas_produzidas"].replace(0, np.nan) * 100).fillna(0).round(1)
-    return grp.sort_values("pct_refugo", ascending=False)
-
-
-def pareto_paradas(evt_df, top_n=5):
-    """Retorna top motivos robustamente, mesmo que as colunas tenham nomes diferentes."""
-    if evt_df is None or evt_df.empty:
-        return pd.DataFrame(columns=["motivo", "count"])
-    df = evt_df.copy()
-    candidate_cols = ["evento", "motivo", "descricao", "tipo", "categoria"]
-    reason_col = next((c for c in candidate_cols if c in df.columns), None)
-    severity_col = next((c for c in ["severidade", "gravidade", "nivel", "severity", "sev_codigo"] if c in df.columns), None)
-
-    # filtrar severidade média/alta quando houver coluna
-    if severity_col:
-        cond_text = df[severity_col].astype(str).str.lower().isin(["média", "media", "alta", "high"])
-        cond_code = pd.to_numeric(df[severity_col], errors="coerce").fillna(0) >= 2
-        df_f = df[cond_text | cond_code]
-    else:
-        df_f = df
-
-    if reason_col:
-        vc = df_f[reason_col].value_counts().reset_index()
-        vc.columns = ["motivo", "count"]
-    else:
-        df_f["motivo"] = "Motivo não informado"
-        vc = df_f["motivo"].value_counts().reset_index()
-        vc.columns = ["motivo", "count"]
-
-    return vc.head(top_n)
-
-
-def build_pressure_humidity_scatter(tele_df):
-    if tele_df is None or tele_df.empty:
-        return pd.DataFrame()
-    df = tele_df.copy()
-    pres_col = next((c for c in ["pressao_mpa", "pressao", "pressure", "pressão"] if c in df.columns), None)
-    hum_col = next((c for c in ["umidade_pct", "umidade", "humidity"] if c in df.columns), None)
-    defect_col = next((c for c in ["flag_defeito", "defeito", "is_defect", "defect"] if c in df.columns), None)
-    if pres_col is None or hum_col is None:
-        return pd.DataFrame()
-    cols = [pres_col, hum_col]
-    if defect_col:
-        cols.append(defect_col)
-    df_plot = df[cols].dropna(subset=[pres_col, hum_col]).copy()
-    if defect_col:
-        df_plot["status"] = df_plot[defect_col].apply(lambda x: "Defeito" if str(x) not in ["0", "False", "false", "nan", "None", "NaN", ""] else "OK")
-    else:
-        df_plot["status"] = "OK"
-    df_plot = df_plot.rename(columns={pres_col: "pressao_mpa", hum_col: "umidade"})
-    return df_plot
-
-
-def aggregate_events(evt_df):
-    if evt_df is None or evt_df.empty:
-        return pd.DataFrame()
-    df = evt_df.copy()
-    sev_col = next((c for c in ["severidade", "gravidade", "nivel", "severity", "sev_codigo"] if c in df.columns), None)
-    if sev_col:
-        high = df[df[sev_col].astype(str).str.lower().str.contains("alta|high") | (pd.to_numeric(df[sev_col], errors="coerce") >= 2)]
-    else:
-        high = df
-    if "timestamp" in high.columns:
-        high = high.sort_values("timestamp", ascending=False)
-    return high.head(30)
-
-
-# ---------------------------
-# 3. CARREGAR DADOS
+# 2. CARREGAR DADOS
 # ---------------------------
 with st.spinner("Carregando dados..."):
     tele_df, prod_df, evt_df = load_data()
@@ -198,24 +75,55 @@ with st.spinner("Carregando dados..."):
 if tele_df is None or prod_df is None or evt_df is None:
     st.stop()
 
+# ---------------------------
+# 3. SIDEBAR / NAVEGAÇÃO (MOVIDO PARA CIMA PARA DEFINIR VARIAVEIS)
+# ---------------------------
+st.sidebar.title("📌 Navegação")
+pagina = st.sidebar.radio("", ["Resumo (Lucro)", "Onde Está Meu Lucro", "Qualidade", "Manutenção", "Telemetria (Mapa)", "Simulador de Qualidade", "Eventos"])
+
+st.sidebar.markdown("---")
+st.sidebar.subheader("⚙️ Período de Análise")
+modo_periodo = st.sidebar.radio(
+    "Escolha o período dos KPIs:",
+    ["Automático (Inteligente)", "Ontem (Fechamento)", "Últimas 24 Horas"],
+    index=0,  # Automático como padrão
+    help="""
+    • **Automático**: Escolhe o melhor período com produção
+    • **Ontem**: Sempre mostra o dia anterior completo  
+    • **Últimas 24h**: Janela móvel de 24 horas
+    """
+)
+
+# Converte para código interno
+modo_map = {
+    "Automático (Inteligente)": "auto",
+    "Ontem (Fechamento)": "ontem",
+    "Últimas 24 Horas": "24h"
+}
+modo_codigo = modo_map[modo_periodo]
+
+st.sidebar.markdown("---")
+st.sidebar.write("EcoData Monitor — SENAI")
+st.sidebar.caption(f"Preço venda: R$ {PRECO_VENDA:.2f} | Custo estimado: R$ {CUSTO_POR_TIJOLO:.2f}")
+
+# ---------------------------
+# 4. PROCESSAMENTO E CÁLCULOS (AGORA COM MODO_CODIGO DEFINIDO)
+# ---------------------------
+
 # pré-process
 tele_agg = aggregate_by_period(tele_df)
-pecas, refugo, defeitos, temp = compute_kpis(prod_df, tele_df)
+
+# CÁLCULOS PRINCIPAIS (Agora modo_codigo existe!)
+pecas, refugo, defeitos, temp, periodo_desc = compute_kpis(prod_df, tele_df, modo_codigo)
 refugo_turno = compute_refugo_by_turno(prod_df)
 pareto = pareto_paradas(evt_df)
 scatter_df = build_pressure_humidity_scatter(tele_df)
 evt_criticos = aggregate_events(evt_df)
 alerts = check_alerts(tele_agg)
 
-
-# ---------------------------
-# 4. SIDEBAR / NAVEGAÇÃO
-# ---------------------------
-st.sidebar.title("📌 Navegação")
-pagina = st.sidebar.radio("", ["Resumo (Lucro)", "Onde Está Meu Lucro", "Qualidade", "Manutenção", "Telemetria (Mapa)", "Eventos"])
-st.sidebar.markdown("---")
-st.sidebar.write("EcoData Monitor — SENAI")
-st.sidebar.caption(f"Preço venda: R$ {PRECO_VENDA:.2f} | Custo estimado: R$ {CUSTO_POR_TIJOLO:.2f}")
+# Novos KPIs
+DISP, PERF, QUAL, OEE = compute_oee_kpis(prod_df, tele_df, modo_periodo=modo_codigo)
+custo_energetico_peca, custo_total_energia = compute_energy_cost(prod_df, PRECO_VENDA, CUSTO_POR_TIJOLO)
 
 
 # ---------------------------
@@ -225,7 +133,8 @@ st.sidebar.caption(f"Preço venda: R$ {PRECO_VENDA:.2f} | Custo estimado: R$ {CU
 # ---------- RESUMO (LUCRO) ----------
 if pagina == "Resumo (Lucro)":
     st.title("🏭 Visão Geral — Resumo Rápido")
-    st.subheader("KPIs de Operação – Último Dia Registrado")
+    st.subheader(f"KPIs de Operação – {periodo_desc}")
+    
     c1, c2, c3, c4 = st.columns(4)
     c1.metric("Peças Produzidas", f"{pecas:,}".replace(",", "."))
     c2.metric("Refugo Total (un)", f"{refugo:,}".replace(",", "."))
@@ -233,25 +142,45 @@ if pagina == "Resumo (Lucro)":
     c4.metric("Temp. Média Matriz", f"{temp:.1f} °C" if not pd.isna(temp) else "N/D")
 
     st.markdown("---")
+    st.subheader("Eficiência Global (OEE)")
+    
+    o1, o2, o3, o4 = st.columns(4)
+    o1.metric("Disponibilidade (D)", f"{DISP*100:.1f}%", help="Tempo Operando / Tempo Programado")
+    o2.metric("Performance (P)", f"{PERF*100:.1f}%", help="Produção Real / Capacidade Nominal")
+    o3.metric("Qualidade (Q)", f"{QUAL*100:.1f}%", help="Peças Boas / Total Produzido")
+    o4.metric("OEE Global (D x P x Q)", f"{OEE*100:.1f}%", help="Eficiência Total da Fábrica")
+
+    st.markdown("---")
+    st.subheader("Custo Operacional")
+    c_e1, c_e2 = st.columns(2)
+    c_e1.metric("Custo Energético por Peça", f"R$ {custo_energetico_peca:.3f}")
+    c_e2.metric("Custo Total de Energia (Período)", f"R$ {custo_total_energia:,.2f}".replace(",", "."))
+
+    st.markdown("---")
     st.subheader("Tendência de Produção (acumulado)")
-    if not tele_agg.empty:
-        df_acc = tele_agg.sort_values("period").copy()
+    if prod_df is not None and not prod_df.empty and "pecas_produzidas" in prod_df.columns:
+        df_acc = prod_df.sort_values("timestamp").copy()
+        # Acumula a produção hora a hora para cada máquina
         df_acc["acumulado"] = df_acc.groupby("maquina_id")["pecas_produzidas"].cumsum()
-        fig = px.line(df_acc, x="period", y="acumulado", color="maquina_id", title="Produção Acumulada por Máquina")
+        
+        fig = px.line(df_acc, x="timestamp", y="acumulado", color="maquina_id", 
+                      title="Produção Acumulada por Máquina (Histórico Real)",
+                      labels={"timestamp": "Data/Hora", "acumulado": "Peças Produzidas", "maquina_id": "Máquina"})
         fig.update_layout(template="plotly_white", hovermode="x unified", yaxis_title="Peças acumuladas")
         st.plotly_chart(fig, use_container_width=True)
+        
         st.markdown(dedent("""
-            *O que isso significa (direto):*  
-            - Mostra quantos tijolos foram produzidos até agora por máquina.  
-            - Se uma máquina estiver muito atrás, ela está custando tempo e dinheiro.
+            *O que isso significa (direto):* - Mostra a corrida de produção entre as máquinas ao longo do tempo.  
+            - A diferença entre as linhas mostra claramente qual máquina é mais eficiente.
         """))
         with st.expander("Detalhes técnicos (engenharia)"):
             st.write(dedent("""
-                - Agregação padrão: 5 minutos.  
-                - 'Acumulado' = soma cumulativa por máquina.
+                - Fonte de dados: Histórico de Produção (producao_silver.csv).  
+                - Agregação: Horária.  
+                - Diferença de inclinação = Diferença de OEE.
             """))
     else:
-        st.info("Dados de telemetria insuficientes para a linha do tempo.")
+        st.info("Dados de produção insuficientes para a linha do tempo.")
 
 
 # ---------- ONDE ESTÁ MEU LUCRO ----------
@@ -306,10 +235,7 @@ elif pagina == "Onde Está Meu Lucro":
         margem_unitaria = PRECO_VENDA - custo_unitario
         margem_pct = (margem_unitaria / PRECO_VENDA) * 100
         st.markdown(dedent(f"""
-            *Resultado:*  
-            - Custo por tijolo: *R$ {custo_unitario:.2f}*  
-            - Margem por tijolo: *R$ {margem_unitaria:.2f}*  
-            - Margem percentual: *{margem_pct:.1f}%*
+            *Resultado:* - Custo por tijolo: *R$ {custo_unitario:.2f}* - Margem por tijolo: *R$ {margem_unitaria:.2f}* - Margem percentual: *{margem_pct:.1f}%*
         """))
         st.info("Margem saudável: 40%–60%. Abaixo de 30% é sinal de alerta.")
     elif gastos_totais > 0 and tijolos_bons == 0:
@@ -325,8 +251,7 @@ elif pagina == "Qualidade":
         fig_rt.update_layout(template="plotly_white", yaxis_title="% Refugo")
         st.plotly_chart(fig_rt, use_container_width=True)
         st.markdown(dedent("""
-            *Explicação direta:*  
-            - Mostra qual turno gera mais desperdício (%).  
+            *Explicação direta:* - Mostra qual turno gera mais desperdício (%).  
             - Ação: conversar com o supervisor do turno no topo do gráfico.
         """))
         with st.expander("Detalhes técnicos (engenharia)"):
@@ -345,8 +270,7 @@ elif pagina == "Qualidade":
         fig_tot.update_layout(template="plotly_white", yaxis_title="Peças por período")
         st.plotly_chart(fig_tot, use_container_width=True)
         st.markdown(dedent("""
-            *Explicação direta:*  
-            - Mostra quando a produção sobe e cai ao longo do dia.  
+            *Explicação direta:* - Mostra quando a produção sobe e cai ao longo do dia.  
             - Se estamos abaixo da meta em horários críticos, ajustar pessoal/produção.
         """))
     else:
@@ -385,24 +309,92 @@ elif pagina == "Manutenção":
 # ---------- TELEMETRIA (MAPA) ----------
 elif pagina == "Telemetria (Mapa)":
     st.title("Mapa do Tesouro Operacional — Pressão x Umidade")
+    
+    # Verifica se o dataframe não está vazio
     if not scatter_df.empty:
-        fig_sc = px.scatter(scatter_df, x="pressao_mpa", y="umidade", color="status",
-                           title="Pressão x Umidade — Verde = OK / Vermelho = Defeito",
-                           labels={"pressao_mpa": "Pressão (MPa)", "umidade": "Umidade (%)"})
+        
+        # CORREÇÃO AQUI: troquei y="umidade" por y="umidade_pct"
+        # Também adicionei verificação para garantir que as colunas existem
+        col_y = "umidade" if "umidade" in scatter_df.columns else "umidade_pct"
+        col_x = "pressao_mpa"
+        
+        fig_sc = px.scatter(scatter_df, x=col_x, y=col_y, color="status",
+                            title="Pressão x Umidade — Verde = OK / Vermelho = Defeito",
+                            labels={col_x: "Pressão (MPa)", col_y: "Umidade (%)"},
+                            color_discrete_map={"OK": "green", "Defeito": "red"})
+        
         fig_sc.update_layout(template="plotly_white")
         st.plotly_chart(fig_sc, use_container_width=True)
+        
         st.markdown(dedent("""
-            *Explicação direta:*  
-            - Pontos vermelhos mostram onde estamos perdendo dinheiro (peças defeituosas).  
+            *Explicação direta:* - Pontos vermelhos mostram onde estamos perdendo dinheiro (peças defeituosas).  
             - Ação: se pressão/umidade saírem da "zona verde", intervir.
         """))
+        
         with st.expander("Detalhes técnicos (engenharia)"):
             st.write(dedent("""
                 - Recomenda-se amostragem física das peças nas zonas vermelhas para validar limites.
+                - Gráfico gerado com base na telemetria histórica (amostra).
             """))
     else:
         st.info("Dados de pressão/umidade insuficientes para gerar o mapa operacional.")
 
+
+# ---------- SIMULADOR DE QUALIDADE (ML) ----------
+elif pagina == "Simulador de Qualidade":
+    st.title("🧠 Simulador de Qualidade Preditiva")
+    st.markdown("Use os parâmetros de telemetria para prever a probabilidade de um defeito ocorrer.")
+    
+    st.subheader("Ajuste os Parâmetros de Entrada")
+    
+    # Valores médios/meta para o Sr. Roberto
+    PRESSAO_META = 15.0
+    UMIDADE_META = 12.0
+    TEMP_META = 60.0
+    
+    col_p, col_u, col_t = st.columns(3)
+    
+    pressao = col_p.slider("Pressão (MPa)", min_value=10.0, max_value=20.0, value=PRESSAO_META, step=0.1)
+    umidade = col_u.slider("Umidade (%)", min_value=5.0, max_value=20.0, value=UMIDADE_META, step=0.1)
+    temperatura = col_t.slider("Temperatura (°C)", min_value=50.0, max_value=70.0, value=TEMP_META, step=0.1)
+    
+    prob_defeito = predict_defeito_prob(pressao, umidade, temperatura)
+    
+    st.markdown("---")
+    st.subheader("Relógio de Risco (Previsão do Modelo)")
+    
+    if prob_defeito is not None:
+        prob_pct = prob_defeito * 100
+        
+        # Lógica de cores para o "Relógio de Risco"
+        if prob_pct < 5:
+            cor = "green"
+            status = "Baixo Risco"
+            emoji = "✅"
+        elif prob_pct < 15:
+            cor = "orange"
+            status = "Risco Moderado"
+            emoji = "⚠️"
+        else:
+            cor = "red"
+            status = "Alto Risco"
+            emoji = "🚨"
+            
+        st.markdown(f"""
+        <div style="background-color: #F7F9FB; border-radius: 10px; padding: 20px; text-align: center; border: 3px solid {cor};">
+            <p style="font-size: 18px; color: #555;">Probabilidade de Defeito:</p>
+            <p style="font-size: 48px; font-weight: 900; color: {cor}; margin: 0;">{emoji} {prob_pct:.2f}%</p>
+            <p style="font-size: 24px; font-weight: 700; color: {cor}; margin-top: 5px;">{status}</p>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        st.markdown(dedent(f"""
+            *Explicação para o Sr. Roberto:* - O modelo de Inteligência Artificial (IA) prevê que, com **Pressão de {pressao:.1f} MPa**, **Umidade de {umidade:.1f}%** e **Temperatura de {temperatura:.1f} °C**, a chance de produzir uma peça defeituosa é de **{prob_pct:.2f}%**.
+            - **Ação:** Mantenha os parâmetros na zona verde (abaixo de 5%) para garantir a qualidade.
+        """))
+        
+    else:
+        st.warning("O modelo de Machine Learning não pôde ser carregado. Verifique o arquivo `rf_defeito.joblib`.")
 
 # ---------- EVENTOS ----------
 elif pagina == "Eventos":
