@@ -226,18 +226,65 @@ streamlit run app/app.py
 # 📂 Estrutura do Projeto
 
 ```
-fabrica-projetosenai/
+PROJETOSENAI/
 ├── app/
+│   ├── config/
+│   │   ├── __init__.py
+│   │   ├── paths.py
+│   │   └── settings.py
 │   ├── data/
+│   │   ├── gold/
+│   │   │   └── kpis_daily_gold.csv
 │   │   ├── raw/
-│   │   └── processed/
+│   │   │   ├── eventos_industriais.csv
+│   │   │   ├── eventos_raw.csv
+│   │   │   ├── historico_producao_1ano.csv
+│   │   │   ├── producao_raw.csv
+│   │   │   ├── telemetria_detalhada_30dias.csv
+│   │   │   ├── telemetria_raw.csv
+│   │   │   └── uns_tags.json
+│   │   ├── silver/
+│   │   │   ├── eventos_silver.csv
+│   │   │   ├── producao_silver.csv
+│   │   │   └── telemetria_silver.csv
+│   │   └── data_dictionary.md
 │   ├── domain/
+│   │   ├── __init__.py
+│   │   ├── aggregates.py
+│   │   ├── alerts.py
+│   │   ├── formatters.py
+│   │   └── kpis.py
+│   ├── ml/
+│   │   ├── __init__.py
+│   │   └── predictor.py
 │   ├── models/
+│   │   └── rf_defeito.joblib
+│   ├── processing/
+│   │   ├── __init__.py
+│   │   ├── data_processing.py
+│   │   └── safe_types.py
+│   ├── viz/
+│   │   ├── __init__.py
+│   │   ├── plotting.py
+│   │   └── ui_components.py
+│   ├── __init__.py
 │   └── app.py
-├── simulador_industrial_hibrido.py
-├── treinar_modelo_v2.py
+├── tests/
+│   ├── __init__.py
+│   ├── test_aggregates.py
+│   ├── test_alerts.py
+│   ├── test_data_loader.py
+│   └── test_data_quality.py
+├── venv/
+├── .gitignore
+├── __init__.py
+├── pipeline_etl.py
 ├── processamento_2.ipynb
-└── requirements.txt
+├── README.md
+├── requirements.txt
+├── simulador_industrial_hibrido.py
+├── treinar_modelo.py
+└── verificar_diferenca.py
 ```
 
 ---
