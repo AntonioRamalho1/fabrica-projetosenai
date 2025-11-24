@@ -6,6 +6,7 @@ Responsável por toda a lógica de negócios, cálculos e agregações de dados.
 import pandas as pd
 import numpy as np
 from typing import Tuple, List, Dict, Any, Optional
+import os # Necessário para load_gold_kpis
 
 # ==============================================================================
 # 1. LÓGICA INTELIGENTE DE PERÍODO (RESOLVE O PROBLEMA DE ZERO PRODUÇÃO)
@@ -205,7 +206,7 @@ def aggregate_by_period(df: pd.DataFrame, freq: str = "5T") -> pd.DataFrame:
     # Remove regras para colunas que não existem
     agg_rules = {k: v for k, v in agg_rules.items() if k in d.columns}
     
-    agg = d.groupby(["maquina_id", "period"]).agg(agg_rules).reset_index()
+    agg = d.groupby(["isa95_equipamento", "period"]).agg(agg_rules).reset_index()
     return agg
 
 
@@ -219,11 +220,19 @@ def check_alerts(tele_agg: pd.DataFrame) -> List[str]:
     crit = tele_agg[tele_agg["pressao_mpa"] < 12]
     
     for _, r in crit.tail(5).iterrows():
-        alerts.append(f"Máquina {r['maquina_id']}: Pressão Baixa ({r['pressao_mpa']:.1f} MPa) às {r['period'].strftime('%H:%M')}")
+        alerts.append(f"Equipamento {r['isa95_equipamento']}: Pressão Baixa ({r['pressao_mpa']:.1f} MPa) às {r['period'].strftime('%H:%M')}")
     return alerts
 
 
 def compute_refugo_by_turno(prod_df: pd.DataFrame) -> pd.DataFrame:
+    """Calcula o percentual de refugo por turno."""
+    if prod_df is None or prod_df.empty or "turno" not in prod_df.columns:
+        return pd.DataFrame(columns=["turno", "pct_refugo"])
+    
+    grp = prod_df.groupby("turno")[["pecas_produzidas", "pecas_refugadas"]].sum()
+    grp["pct_refugo"] = (grp["pecas_refugadas"] / grp["pecas_produzidas"].replace(0, np.nan) * 100).fillna(0).round(1)
+    
+    return grp.reset_index().sort_values("pct_refugo", ascending=False)
     """KPI de qualidade por turno."""
     if prod_df is None or prod_df.empty or "turno" not in prod_df.columns:
         return pd.DataFrame()
@@ -234,21 +243,65 @@ def compute_refugo_by_turno(prod_df: pd.DataFrame) -> pd.DataFrame:
     return grp.sort_values("pct_refugo", ascending=False)
 
 
-def pareto_paradas(evt_df: pd.DataFrame, top_n: int = 5) -> pd.DataFrame:
-    """Gera dados para gráfico de Pareto de paradas."""
+def calculate_mttr_mtbf(evt_df: pd.DataFrame) -> Tuple[float, float]:
+    """
+    Calcula o Tempo Médio para Reparo (MTTR) e o Tempo Médio Entre Falhas (MTBF).
+    Assume que cada evento é uma falha e a duração é o tempo de parada.
+    """
     if evt_df is None or evt_df.empty:
-        return pd.DataFrame(columns=["motivo", "count"])
+        return 0.0, 0.0
+    
+    df_f = evt_df.copy()
+    
+    # Filtra apenas eventos de falha (assumindo que eventos com duração > 0 são falhas)
+    # A coluna 'duracao_min' é garantida pela função load_data no app.py
+    falhas = df_f[df_f["duracao_min"] > 0].copy()
+    
+    if falhas.empty:
+        return 0.0, 0.0
+
+    # MTTR (Mean Time To Repair): Tempo total de reparo / Número de falhas
+    total_down_time = falhas["duracao_min"].sum()
+    num_falhas = len(falhas)
+    mttr = total_down_time / num_falhas if num_falhas > 0 else 0.0
+
+    # MTBF (Mean Time Between Failures): Tempo total de operação / Número de falhas
+    # Tempo total de operação = (Tempo total do período) - (Tempo total de parada)
+    
+    # Tempo total do período (em minutos)
+    tempo_total_min = (evt_df["timestamp"].max() - evt_df["timestamp"].min()).total_seconds() / 60
+    
+    tempo_operacao = tempo_total_min - total_down_time
+    mtbf = tempo_operacao / num_falhas if num_falhas > 0 else 0.0
+
+    return mttr, mtbf
+
+def pareto_paradas(evt_df: pd.DataFrame, top_n: int = 5) -> pd.DataFrame:
+    """
+    Gera dados para gráfico de Pareto de paradas, incluindo o tempo total de parada.
+    """
+    if evt_df is None or evt_df.empty:
+        return pd.DataFrame(columns=["motivo", "count", "tempo_total_min"])
+    
+    df_f = evt_df.copy()
     
     # Filtra eventos críticos (Média/Alta severidade)
-    df_f = evt_df.copy()
+    # A coluna 'duracao_min' é garantida pela função load_data no app.py
     if "sev_codigo" in df_f.columns:
         df_f = df_f[df_f["sev_codigo"] >= 2] # 2=Média, 3=Alta
     elif "severidade" in df_f.columns:
         df_f = df_f[df_f["severidade"].str.lower().isin(["média", "alta", "media", "high"])]
-        
-    vc = df_f["evento"].value_counts().reset_index()
-    vc.columns = ["motivo", "count"]
-    return vc.head(top_n)
+    
+    # Agrupa por motivo e soma a contagem e a duração (tempo de parada)
+    grouped = df_f.groupby("evento").agg(
+        count=("evento", "size"),
+        tempo_total_min=("duracao_min", "sum")
+    ).reset_index()
+    
+    grouped.columns = ["motivo", "count", "tempo_total_min"]
+    
+    # Ordena pelo tempo total de parada (o mais impactante)
+    return grouped.sort_values("tempo_total_min", ascending=False).head(top_n)
 
 
 def build_pressure_humidity_scatter(tele_df: pd.DataFrame) -> pd.DataFrame:
@@ -277,9 +330,61 @@ def aggregate_events(evt_df: pd.DataFrame) -> pd.DataFrame:
     criticos = evt_df[evt_df["sev_codigo"] == 3] if "sev_codigo" in evt_df.columns else evt_df
     return criticos.sort_values("timestamp", ascending=False).head(10)
 
+def load_gold_kpis() -> pd.DataFrame:
+    """Carrega a tabela Gold de KPIs diários."""
+    gold_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "gold", "kpis_daily_gold.csv")
+    try:
+        df = pd.read_csv(gold_path)
+        df["data"] = pd.to_datetime(df["data"])
+        return df
+    except FileNotFoundError:
+        print(f"AVISO: Arquivo Gold não encontrado em {gold_path}. Execute o pipeline_etl.py.")
+        return pd.DataFrame()
+
 
 def latest_status(tele_agg: pd.DataFrame) -> pd.DataFrame:
+    """Retorna o status mais recente de cada equipamento."""
+    if tele_agg is None or tele_agg.empty:
+        return pd.DataFrame()
+    return tele_agg.sort_values("period").groupby("isa95_equipamento").tail(1).set_index("isa95_equipamento")
     """Retorna o status mais recente de cada máquina."""
     if tele_agg is None or tele_agg.empty:
         return pd.DataFrame()
     return tele_agg.sort_values("period").groupby("maquina_id").tail(1).set_index("maquina_id")
+
+# --- FUNÇÕES DE CONTEXTUALIZAÇÃO (ISA-95) ---
+
+def map_isa95(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Aplica a hierarquia ISA-95 (Planta/Área/Linha) ao DataFrame.
+    Assume que a coluna 'maquina_id' já existe.
+    """
+    if df is None or df.empty or "maquina_id" not in df.columns:
+        return df
+    
+    df_mapped = df.copy()
+    
+    # 1. Renomeia maquina_id para isa95_equipamento (Padrão ISA-95)
+    df_mapped = df_mapped.rename(columns={"maquina_id": "isa95_equipamento"})
+    
+    # 2. Simulação da Hierarquia ISA-95 (Nível 3: Manufatura)
+    # Empresa: SENAI
+    # Planta: Tijolos_PE
+    # Área: Extrusao
+    # Linha: Linha_A
+    
+    df_mapped["isa95_planta"] = "Tijolos_PE"
+    df_mapped["isa95_area"] = "Extrusao"
+    
+    # 3. Mapeamento da Linha e Máquina (Nível 2: Controle de Produção)
+    def get_linha(equipamento_id):
+        if equipamento_id in ["M1", "M2"]:
+            return "Linha_A"
+        elif equipamento_id in ["M3", "M4"]:
+            return "Linha_B"
+        else:
+            return "Linha_Outras"
+            
+    df_mapped["isa95_linha"] = df_mapped["isa95_equipamento"].apply(get_linha)
+    
+    return df_mapped

@@ -8,7 +8,9 @@ from domain.kpis import (
     aggregate_by_period, compute_kpis, check_alerts, 
     compute_refugo_by_turno, pareto_paradas, 
     build_pressure_humidity_scatter, aggregate_events,
-    compute_oee_kpis, compute_energy_cost
+    compute_oee_kpis, compute_energy_cost,
+    calculate_mttr_mtbf, load_gold_kpis, # Novas funções
+    map_isa95 # ISA-95
 )
 from ml.predictor import predict_defeito_prob
 
@@ -39,7 +41,7 @@ def load_data():
     """
     try:
         base_dir = os.path.dirname(os.path.abspath(__file__))
-        data_dir = os.path.join(base_dir, "data", "processed")
+        data_dir = os.path.join(base_dir, "data", "silver") # Alterado de 'processed' para 'silver'
 
         tele_path = os.path.join(data_dir, "telemetria_silver.csv")
         prod_path = os.path.join(data_dir, "producao_silver.csv")
@@ -55,6 +57,8 @@ def load_data():
         prod = pd.read_csv(prod_path)
         evt  = pd.read_csv(evt_path)
 
+
+
         # parse timestamp quando existir
         for df in (tele, prod, evt):
             if "timestamp" in df.columns:
@@ -69,11 +73,25 @@ def load_data():
 # ---------------------------
 # 2. CARREGAR DADOS
 # ---------------------------
-with st.spinner("Carregando dados..."):
+with st.spinner("Carregando dados da Camada Silver..."):
+    # Carrega dados da Camada Silver (limpos e padronizados)
     tele_df, prod_df, evt_df = load_data()
 
 if tele_df is None or prod_df is None or evt_df is None:
     st.stop()
+
+# --- CORREÇÃO DE ROBUSTEZ: FALLBACK PARA duracao_min ---
+# Garante que a coluna duracao_min exista no DataFrame de Eventos antes de qualquer função de KPI
+if evt_df is not None and "duracao_min" not in evt_df.columns:
+    print("AVISO: Coluna 'duracao_min' ausente no arquivo. Criando com valor padrão de 10 min para evitar KeyError.")
+    evt_df["duracao_min"] = 10.0
+# --------------------------------------------------------
+
+# --- CONTEXTUALIZAÇÃO ISA-95 ---
+# Aplica a hierarquia ISA-95 aos DataFrames para contextualização
+tele_df = map_isa95(tele_df)
+prod_df = map_isa95(prod_df)
+evt_df = map_isa95(evt_df)
 
 # ---------------------------
 # 3. SIDEBAR / NAVEGAÇÃO (MOVIDO PARA CIMA PARA DEFINIR VARIAVEIS)
@@ -104,6 +122,8 @@ modo_codigo = modo_map[modo_periodo]
 
 st.sidebar.markdown("---")
 st.sidebar.write("EcoData Monitor — SENAI")
+st.sidebar.caption("Arquitetura de Dados: **Medalhão (Bronze/Silver/Gold)**")
+st.sidebar.caption("Contexto: **Edge -> UNS -> Cloud** (Padrão Industrial)")
 st.sidebar.caption(f"Preço venda: R$ {PRECO_VENDA:.2f} | Custo estimado: R$ {CUSTO_POR_TIJOLO:.2f}")
 
 # ---------------------------
@@ -124,6 +144,12 @@ alerts = check_alerts(tele_agg)
 # Novos KPIs
 DISP, PERF, QUAL, OEE = compute_oee_kpis(prod_df, tele_df, modo_periodo=modo_codigo)
 custo_energetico_peca, custo_total_energia = compute_energy_cost(prod_df, PRECO_VENDA, CUSTO_POR_TIJOLO)
+
+# KPIs de Confiabilidade (MTTR/MTBF)
+MTTR, MTBF = calculate_mttr_mtbf(evt_df)
+
+# Dados Gold
+kpis_gold_df = load_gold_kpis()
 
 
 # ---------------------------
@@ -161,17 +187,18 @@ if pagina == "Resumo (Lucro)":
     if prod_df is not None and not prod_df.empty and "pecas_produzidas" in prod_df.columns:
         df_acc = prod_df.sort_values("timestamp").copy()
         # Acumula a produção hora a hora para cada máquina
-        df_acc["acumulado"] = df_acc.groupby("maquina_id")["pecas_produzidas"].cumsum()
+        # Agrupa por Linha ISA-95 e Máquina (Equipamento)
+        df_acc["acumulado"] = df_acc.groupby("isa95_equipamento")["pecas_produzidas"].cumsum()
         
-        fig = px.line(df_acc, x="timestamp", y="acumulado", color="maquina_id", 
-                      title="Produção Acumulada por Máquina (Histórico Real)",
-                      labels={"timestamp": "Data/Hora", "acumulado": "Peças Produzidas", "maquina_id": "Máquina"})
+        fig = px.line(df_acc, x="timestamp", y="acumulado", color="isa95_equipamento", 
+                      title="Produção Acumulada por Equipamento (ISA-95)",
+                      labels={"timestamp": "Data/Hora", "acumulado": "Peças Produzidas", "isa95_equipamento": "Equipamento"})
         fig.update_layout(template="plotly_white", hovermode="x unified", yaxis_title="Peças acumuladas")
         st.plotly_chart(fig, use_container_width=True)
         
         st.markdown(dedent("""
-            *O que isso significa (direto):* - Mostra a corrida de produção entre as máquinas ao longo do tempo.  
-            - A diferença entre as linhas mostra claramente qual máquina é mais eficiente.
+            *O que isso significa (direto):* - Mostra a corrida de produção entre os **Equipamentos (ISA-95)** ao longo do tempo.  
+            - A diferença entre as linhas mostra claramente qual equipamento é mais eficiente.
         """))
         with st.expander("Detalhes técnicos (engenharia)"):
             st.write(dedent("""
@@ -247,13 +274,30 @@ elif pagina == "Qualidade":
     st.title("Qualidade — Onde estamos perdendo material?")
     # Refugo por turno
     if not refugo_turno.empty:
-        fig_rt = px.bar(refugo_turno, x="turno", y="pct_refugo", text="pct_refugo", title="Taxa de Refugo por Turno (%)")
-        fig_rt.update_layout(template="plotly_white", yaxis_title="% Refugo")
-        st.plotly_chart(fig_rt, use_container_width=True)
-        st.markdown(dedent("""
-            *Explicação direta:* - Mostra qual turno gera mais desperdício (%).  
-            - Ação: conversar com o supervisor do turno no topo do gráfico.
-        """))
+        # Adiciona a hierarquia ISA-95 para análise de refugo por Linha
+        refugo_linha = prod_df.groupby("isa95_linha")[["pecas_produzidas", "pecas_refugadas"]].sum().reset_index()
+        refugo_linha["pct_refugo"] = (refugo_linha["pecas_refugadas"] / refugo_linha["pecas_produzidas"].replace(0, np.nan) * 100).fillna(0).round(1)
+        refugo_linha = refugo_linha.sort_values("pct_refugo", ascending=False)
+        
+        col_turno, col_linha = st.columns(2)
+        
+        with col_turno:
+            fig_rt = px.bar(refugo_turno, x="turno", y="pct_refugo", text="pct_refugo", title="Taxa de Refugo por Turno (%)")
+            fig_rt.update_layout(template="plotly_white", yaxis_title="% Refugo")
+            st.plotly_chart(fig_rt, use_container_width=True)
+            st.markdown(dedent("""
+                *Explicação direta:* - Mostra qual turno gera mais desperdício (%).  
+                - Ação: conversar com o supervisor do turno no topo do gráfico.
+            """))
+            
+        with col_linha:
+            fig_rl = px.bar(refugo_linha, x="isa95_linha", y="pct_refugo", text="pct_refugo", title="Taxa de Refugo por Linha (ISA-95)")
+            fig_rl.update_layout(template="plotly_white", yaxis_title="% Refugo")
+            st.plotly_chart(fig_rl, use_container_width=True)
+            st.markdown(dedent("""
+                *Explicação ISA-95:* - Mostra qual **Linha de Produção** (Área) tem maior problema de qualidade.  
+                - Ação: Focar a manutenção e calibração na Linha com maior refugo.
+            """))
         with st.expander("Detalhes técnicos (engenharia)"):
             st.write(dedent("""
                 - % Refugo = (refugos / peças_produzidas) * 100 por turno.
@@ -266,7 +310,7 @@ elif pagina == "Qualidade":
     st.subheader("Linha do tempo da produção (todas as máquinas)")
     if not tele_agg.empty:
         df_total_period = tele_agg.groupby("period")["pecas_produzidas"].sum().reset_index()
-        fig_tot = px.area(df_total_period, x="period", y="pecas_produzidas", title="Produção Total por Período (Todas as Máquinas)")
+        fig_tot = px.area(df_total_period, x="period", y="pecas_produzidas", title="Produção Total por Período (Todas as Linhas ISA-95)")
         fig_tot.update_layout(template="plotly_white", yaxis_title="Peças por período")
         st.plotly_chart(fig_tot, use_container_width=True)
         st.markdown(dedent("""
@@ -282,14 +326,30 @@ elif pagina == "Manutenção":
     st.title("🔧 Manutenção Inteligente — Onde focar")
     st.markdown("Análise automática das causas que mais param sua fábrica.")
 
-    st.subheader("📊 Pareto de Paradas (Média/Alta Severidade)")
-    pareto = pareto_paradas(evt_df)
+    st.subheader("📊 Confiabilidade e Perda de Tempo (Down Time)")
+    
+    c_mttr, c_mtbf = st.columns(2)
+    c_mttr.metric("MTTR (Tempo Médio para Reparo)", f"{MTTR:.1f} min", help="Tempo médio que a máquina leva para voltar a operar após uma falha.")
+    c_mtbf.metric("MTBF (Tempo Médio Entre Falhas)", f"{MTBF:.1f} min", help="Tempo médio que a máquina opera entre uma falha e outra.")
+    
+    st.markdown("---")
+    st.subheader("Análise de Causa Raiz: Pareto de Paradas por Duração")
+    
     if pareto.empty:
         st.info("Nenhum evento de severidade média/alta encontrado.")
     else:
-        fig_pareto = px.bar(pareto, x="motivo", y="count", title="Top causas de parada (Pareto simplificado)", text_auto=True)
-        fig_pareto.update_layout(template="plotly_white", xaxis_title="Causa", yaxis_title="Ocorrências")
+        # Gráfico de Pareto aprimorado: agora usa tempo_total_min
+        fig_pareto = px.bar(pareto, x="motivo", y="tempo_total_min", 
+                            title="Top Causas de Parada por DURAÇÃO (Análise de Impacto)", 
+                            text_auto=".1f",
+                            labels={"tempo_total_min": "Tempo Total de Parada (min)", "motivo": "Causa"})
+        fig_pareto.update_layout(template="plotly_white", xaxis_title="Causa", yaxis_title="Tempo Total de Parada (min)")
         st.plotly_chart(fig_pareto, use_container_width=True)
+        
+        st.markdown(dedent("""
+            *Explicação para o Sr. Roberto:* - Este gráfico mostra as causas que **mais consomem tempo** da sua fábrica.  
+            - **Ação:** Priorize ordens de serviço para as causas no topo do gráfico, pois elas trarão o maior ganho de disponibilidade.
+        """))
 
     st.markdown("---")
     st.subheader("🚨 Últimos Eventos Críticos (Alta severidade)")
@@ -300,9 +360,13 @@ elif pagina == "Manutenção":
         evt_crit = evt_df[evt_df["severidade"].astype(str).str.lower().str.contains("alta")]
     else:
         evt_crit = pd.DataFrame()
+    
     if evt_crit.empty:
         st.success("Nenhum evento crítico detectado.")
     else:
+        # Converte tudo para string (.astype(str)) antes de juntar
+        evt_crit["isa95_contexto"] = evt_crit["isa95_planta"].astype(str) + "/" + evt_crit["isa95_linha"].astype(str) + "/" + evt_crit["isa95_equipamento"].astype(str)
+        
         st.data_editor(evt_crit.sort_values("timestamp", ascending=False).head(20), use_container_width=True, height=420)
 
 
