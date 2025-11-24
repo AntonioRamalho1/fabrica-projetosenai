@@ -174,19 +174,19 @@ O simulador industrial gera três tipos de arquivos:
 
 ---
 
-# 🖥️ Dashboard: Módulos
+## 🚀 Funcionalidades do Dashboard
 
-O painel possui **7 abas principais**:
+O sistema conta com **7 Módulos de Análise**, desenhados para cobrir todas as camadas da gestão industrial:
 
-| Aba | Função |
-|------|-------|
-| **Visão Geral** | KPIs, produção por máquina e turnos |
-| **Lucro** | Mostra dinheiro perdido por refugos e ineficiência |
-| **Qualidade** | Análises de defeito, correlação e probabilidades |
-| **Manutenção** | Pareto de causas e histórico |
-| **Telemetria** | Pressão, temperatura e umidade em tempo real |
-| **Simulador IA** | Predição do risco de defeito |
-| **Eventos** | Auditoria completa de alarmes e paradas |
+| Módulo | Descrição |
+| :--- | :--- |
+| **📊 Visão Geral da Fábrica** | O "Cockpit" do gestor. Mostra o **OEE**, produção do dia e status das máquinas. |
+| **💰 Perdas Financeiras** | Traduz engenharia em dinheiro. Calcula o **"Dinheiro Evaporado"** por ineficiência. |
+| **📉 Qualidade & Refugo** | Identifica perdas de material. Gráficos comparativos mostram qual turno gera mais refugo. |
+| **🔧 Paradas & Confiabilidade** | Gráfico de **Pareto** e KPIs de engenharia (**MTTR/MTBF**) para reduzir downtime. |
+| **📡 Sensores em Tempo Real** | Painéis de engenharia com gráficos de linha para Pressão e Temperatura (Diagnóstico Fino). |
+| **🤖 Inteligência Artificial** | **Destaque:** Ferramenta preditiva onde o operador testa parâmetros e a IA retorna o **Risco de Defeito**. |
+| **📋 Histórico de Alertas** | Tabela histórica completa para auditoria e rastreabilidade de ocorrências. |
 
 ---
 

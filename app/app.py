@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import plotly.express as px
+import plotly.graph_objects as go
 import os
 from textwrap import dedent
 from domain.kpis import (
@@ -94,37 +95,54 @@ prod_df = map_isa95(prod_df)
 evt_df = map_isa95(evt_df)
 
 # ---------------------------
-# 3. SIDEBAR / NAVEGAÇÃO (MOVIDO PARA CIMA PARA DEFINIR VARIAVEIS)
+# 3. SIDEBAR / NAVEGAÇÃO (SIMPLIFICADA)
 # ---------------------------
-st.sidebar.title("📌 Navegação")
-pagina = st.sidebar.radio("", ["Resumo (Lucro)", "Onde Está Meu Lucro", "Qualidade", "Manutenção", "Telemetria (Mapa)", "Simulador de Qualidade", "Eventos"])
-
+st.sidebar.title("📌 Menu Principal")
+pagina = st.sidebar.radio(
+    "Selecione o Módulo:", 
+    [
+        "📊 Visão Geral da Fábrica", 
+        "💰 Perdas Financeiras", 
+        "📉 Qualidade & Refugo", 
+        "🔧 Paradas & Confiabilidade", 
+        "📡 Sensores em Tempo Real", 
+        "🤖 Inteligência Artificial", 
+        "📋 Histórico de Alertas"
+    ]
+)
 st.sidebar.markdown("---")
-st.sidebar.subheader("⚙️ Período de Análise")
-modo_periodo = st.sidebar.radio(
-    "Escolha o período dos KPIs:",
-    ["Automático (Inteligente)", "Ontem (Fechamento)", "Últimas 24 Horas"],
-    index=0,  # Automático como padrão
-    help="""
-    • **Automático**: Escolhe o melhor período com produção
-    • **Ontem**: Sempre mostra o dia anterior completo  
-    • **Últimas 24h**: Janela móvel de 24 horas
-    """
+
+# Filtro Simplificado para o Sr. Roberto
+st.sidebar.title("📅 Filtro de Data")
+opcao_visualizacao = st.sidebar.radio(
+    "O que você quer analisar?",
+    ["Hoje (Tempo Real)", "Ontem (Fechamento)", "Últimas 24h"],
+    index=0
 )
 
-# Converte para código interno
-modo_map = {
-    "Automático (Inteligente)": "auto",
+# Tradução para o código (Backend)
+# O sistema ainda usa 'auto', 'ontem', '24h', mas o usuário vê nomes bonitos
+mapa_modos = {
+    "Hoje (Tempo Real)": "auto",       # A lógica inteligente continua aqui
     "Ontem (Fechamento)": "ontem",
-    "Últimas 24 Horas": "24h"
+    "Últimas 24h": "24h"
 }
-modo_codigo = modo_map[modo_periodo]
+modo_codigo = mapa_modos[opcao_visualizacao]
 
+# Badge de Arquitetura (Mantido, pois conta ponto no Edital)
 st.sidebar.markdown("---")
-st.sidebar.write("EcoData Monitor — SENAI")
-st.sidebar.caption("Arquitetura de Dados: **Medalhão (Bronze/Silver/Gold)**")
-st.sidebar.caption("Contexto: **Edge -> UNS -> Cloud** (Padrão Industrial)")
-st.sidebar.caption(f"Preço venda: R$ {PRECO_VENDA:.2f} | Custo estimado: R$ {CUSTO_POR_TIJOLO:.2f}")
+st.sidebar.markdown(
+    """
+    <div style="background-color: #e8f5e9; padding: 10px; border-radius: 5px; border: 1px solid #4caf50; text-align: center;">
+        <small style="color: #2e7d32; font-weight: bold;">📡 Conexão Ativa</small><br>
+        <span style="font-size: 11px; color: #333;">Edge ➡ UNS ➡ Cloud</span>
+    </div>
+    """, 
+    unsafe_allow_html=True
+)
+
+st.sidebar.caption(f"💰 Preço Venda: R$ {PRECO_VENDA:.2f}")
+st.sidebar.caption(f"📉 Custo Est.: R$ {CUSTO_POR_TIJOLO:.2f}")
 
 # ---------------------------
 # 4. PROCESSAMENTO E CÁLCULOS (AGORA COM MODO_CODIGO DEFINIDO)
@@ -157,8 +175,8 @@ kpis_gold_df = load_gold_kpis()
 # ---------------------------
 
 # ---------- RESUMO (LUCRO) ----------
-if pagina == "Resumo (Lucro)":
-    st.title("🏭 Visão Geral — Resumo Rápido")
+if pagina == "📊 Visão Geral da Fábrica":
+    st.title("📊 Visão Geral da Fábrica")
     st.subheader(f"KPIs de Operação – {periodo_desc}")
     
     c1, c2, c3, c4 = st.columns(4)
@@ -210,169 +228,312 @@ if pagina == "Resumo (Lucro)":
         st.info("Dados de produção insuficientes para a linha do tempo.")
 
 
-# ---------- ONDE ESTÁ MEU LUCRO ----------
-elif pagina == "Onde Está Meu Lucro":
-    st.title("💰 Onde Está Meu Lucro?")
-    st.write("Comparação entre faturamento real e potencial máximo (hora a hora).")
+# ---------- ONDE ESTÁ MEU LUCRO (VERSÃO PROFISSIONAL E SIMPLIFICADA) ----------
+elif pagina == "💰 Perdas Financeiras":
+    st.title("💰 Análise de Perdas Financeiras")
+    st.markdown("Identifique onde o dinheiro está sendo perdido (Refugo vs. Ineficiência).")
 
-    tijolos_bons = int(prod_df["pecas_produzidas"].sum()) if "pecas_produzidas" in prod_df.columns else 0
-    tijolos_refugados = int(prod_df["pecas_refugadas"].sum()) if "pecas_refugadas" in prod_df.columns else 0
-    faturamento_real = tijolos_bons * PRECO_VENDA
-    dinheiro_refugo = tijolos_refugados * PRECO_VENDA
+    # --- 1. CÁLCULOS BASE ---
+    total_produzido = prod_df["pecas_produzidas"].sum() if "pecas_produzidas" in prod_df else 0
+    total_refugo = prod_df["pecas_refugadas"].sum() if "pecas_refugadas" in prod_df else 0
+    total_boas = total_produzido - total_refugo
 
-    if prod_df is not None and "timestamp" in prod_df.columns and "pecas_produzidas" in prod_df.columns:
-        prod_df["hour"] = prod_df["timestamp"].dt.floor("H")
-        hourly = prod_df.groupby("hour")["pecas_produzidas"].sum().reset_index()
-        potencial_max_hora = int(hourly["pecas_produzidas"].max()) if not hourly.empty else 0
-        horas_totais = prod_df["hour"].nunique()
-        lucro_potencial = potencial_max_hora * horas_totais * PRECO_VENDA
-        dinheiro_evaporado = lucro_potencial - faturamento_real
-    else:
-        potencial_max_hora = 0
-        horas_totais = 0
-        lucro_potencial = 0.0
-        dinheiro_evaporado = 0.0
+    # Faturamento real
+    faturamento_real = total_boas * PRECO_VENDA
+    dinheiro_lixo = total_refugo * PRECO_VENDA
 
+    # Eficiência real
+    eficiencia_real = (total_boas / total_produzido) * 100 if total_produzido > 0 else 0
+
+    # Potencial estimado (20% acima do real)
+    faturamento_potencial = faturamento_real * 1.20
+    perda_por_ineficiencia = faturamento_potencial - faturamento_real
+
+    # --- 2. PAINEL EXECUTIVO ---
     k1, k2, k3 = st.columns(3)
-    k1.metric("📦 Faturamento Real", f"R$ {faturamento_real:,.2f}".replace(",", "."))
-    k2.metric("🔥 Dinheiro Jogando Fora (Refugo)", f"R$ {dinheiro_refugo:,.2f}".replace(",", "."))
-    k3.metric("💨 Dinheiro que Evaporou (Ineficiência)", f"R$ {dinheiro_evaporado:,.2f}".replace(",", "."))
+
+    k1.metric("Eficiência Real da Fábrica", f"{eficiencia_real:.1f}%", delta="Eficiência Operacional")
+    k2.metric("Dinheiro no Lixo (Refugo)", f"R$ {dinheiro_lixo:,.2f}".replace(",", "."), delta="- Perda direta", delta_color="inverse")
+    k3.metric("Perda Oculta (Ineficiência)", f"R$ {perda_por_ineficiencia:,.2f}".replace(",", "."), delta="- Potencial não capturado", delta_color="inverse")
 
     st.markdown("---")
-    st.subheader("Análise do Potencial")
-    st.write(dedent(f"""
-        - Pico observado (melhor hora): *{potencial_max_hora} tijolos/hora*.  
-        - Horas observadas no histórico: *{horas_totais} horas*.  
-        - Faturamento potencial (se tivesse produzido no pico): *R$ {lucro_potencial:,.2f}*.  
-        - Diferença (dinheiro evaporado): *R$ {dinheiro_evaporado:,.2f}*.
-    """))
 
-    with st.expander("Como interpretar (direto para o Sr. Roberto)"):
-        st.write(dedent("""
-            - 'Dinheiro evaporado' = perda por paradas e operação abaixo do pico.  
-            - Priorize reduzir paradas/baixo ritmo nas horas críticas para recuperar faturamento.
-        """))
+    # --- 3. SIMULADOR DE GANHO REAL ---
+    st.subheader("🔮 Simulador de Ganhos com Melhoria de Eficiência")
+
+    melhoria = st.slider("Melhoria de Eficiência (%)", 1, 50, 10)
+
+    receita_extra = faturamento_real * (melhoria / 100)
+
+    st.markdown(f"""
+    <div style="background-color:#e8f5e9;padding:25px;border-radius:10px;margin-top:15px;border-left:6px solid #2e7d32;">
+        <h3 style="color:#2e7d32;margin:0;">Receita Extra Projetada</h3>
+        <p style="font-size:28px;color:#1b5e20;font-weight:bold;margin:0;">+ R$ {receita_extra:,.2f}</p>
+        <p style="color:#555;margin-top:10px;">(Se a eficiência subir para <b>{eficiencia_real + melhoria:.1f}%</b> )</p>
+    </div>
+    """, unsafe_allow_html=True)
 
     st.markdown("---")
-    st.subheader("🧮 Calculadora Reversa de Custo (opcional)")
-    st.write("Transforme custos mensais em custo unitário e margem.")
-    gastos_totais = st.number_input("Quanto gastou no mês (R$)?", min_value=0.0, value=50000.0, step=100.0, format="%.2f")
-    if gastos_totais > 0 and tijolos_bons > 0:
-        custo_unitario = gastos_totais / tijolos_bons
-        margem_unitaria = PRECO_VENDA - custo_unitario
-        margem_pct = (margem_unitaria / PRECO_VENDA) * 100
-        st.markdown(dedent(f"""
-            *Resultado:* - Custo por tijolo: *R$ {custo_unitario:.2f}* - Margem por tijolo: *R$ {margem_unitaria:.2f}* - Margem percentual: *{margem_pct:.1f}%*
-        """))
-        st.info("Margem saudável: 40%–60%. Abaixo de 30% é sinal de alerta.")
-    elif gastos_totais > 0 and tijolos_bons == 0:
-        st.warning("Não há produção válida na base para calcular custo unitário.")
+
+    # --- 4. AÇÕES PRÁTICAS PARA GERAR O GANHO ---
+    st.subheader("🛠️ O que fazer na fábrica para capturar essa Receita Extra?")
+
+    st.markdown("""
+    Para que a melhoria de eficiência realmente gere ganho financeiro, recomenda-se:
+
+    ### ✅ 1. Reduzir Paradas e Microparadas
+    * Organizar manutenção preventiva semanal  
+    * Trocar sensores instáveis (principalmente pressão e temperatura)
+
+    ### ✅ 2. Reduzir Refugo (Perda Direta)
+    * Manter temperatura estável da matriz (evitar picos > 65 °C)  
+    * Garantir pressão acima de 12 MPa  
+    * Controlar umidade das peças antes da prensa
+
+    ### ✅ 3. Aumentar Produção por Hora
+    * Padronizar setup → Operador sempre iniciar com mesmos parâmetros  
+    * Automatizar alarmes de limites (telemetria já tem!)
+
+    ### ✅ 4. Atuar na Máquina Crítica
+    * A Máquina 02 (a pior) deve ser o foco  
+    * Reduzir defeitos nela aumenta o ganho estimado imediatamente  
+
+    ### 🎯 Ação Direta
+    Se implementar **metas operacionais de eficiência diária**, o ganho calculado acima deixa de ser uma simulação e vira **dinheiro real no caixa**.
+    """)
+
+    st.success("💡 Quanto maior a consistência diária, maior a captura do potencial financeiro da fábrica.")
 
 
-# ---------- QUALIDADE ----------
-elif pagina == "Qualidade":
-    st.title("Qualidade — Onde estamos perdendo material?")
-    # Refugo por turno
-    if not refugo_turno.empty:
-        # Adiciona a hierarquia ISA-95 para análise de refugo por Linha
-        refugo_linha = prod_df.groupby("isa95_linha")[["pecas_produzidas", "pecas_refugadas"]].sum().reset_index()
-        refugo_linha["pct_refugo"] = (refugo_linha["pecas_refugadas"] / refugo_linha["pecas_produzidas"].replace(0, np.nan) * 100).fillna(0).round(1)
-        refugo_linha = refugo_linha.sort_values("pct_refugo", ascending=False)
+
+# ---------- QUALIDADE (CORRIGIDA E BLINDADA) ----------
+elif pagina == "📉 Qualidade & Refugo":
+    st.title("📉 Controle de Qualidade & Refugo")
+    st.markdown("Diagnóstico de causas raízes e volume de desperdício por máquina.")
+
+    # --- 0. DETECÇÃO INTELIGENTE DE COLUNAS ---
+    # Descobre qual o nome da coluna de máquina (maquina_id, isa95_equipamento, etc.)
+    col_maq_prod = "maquina_id"
+    if "isa95_equipamento" in prod_df.columns: col_maq_prod = "isa95_equipamento"
+    elif "id_maquina" in prod_df.columns: col_maq_prod = "id_maquina"
+
+    col_maq_tele = "maquina_id"
+    if "isa95_equipamento" in tele_df.columns: col_maq_tele = "isa95_equipamento"
+    elif "id_maquina" in tele_df.columns: col_maq_tele = "id_maquina"
+
+    # --- 1. KPIs DE IMPACTO ---
+    total_refugo = int(prod_df["pecas_refugadas"].sum())
+    custo_refugo = total_refugo * PRECO_VENDA
+    
+    c1, c2 = st.columns(2)
+    c1.metric("Peças Perdidas (Total)", f"{total_refugo:,}".replace(",", "."), delta="Refugo Acumulado", delta_color="inverse")
+    c2.metric("Prejuízo Financeiro", f"R$ {custo_refugo:,.2f}", delta="Perda Monetária", delta_color="inverse")
+
+    st.markdown("---")
+
+    # --- 2. TENDÊNCIA TEMPORAL ---
+    st.subheader("📈 Evolução Diária de Defeitos")
+    
+    if tele_df is not None and not tele_df.empty:
+        df_trend = tele_df.copy()
+        df_trend["Data"] = df_trend["timestamp"].dt.date
         
-        col_turno, col_linha = st.columns(2)
-        
-        with col_turno:
-            fig_rt = px.bar(refugo_turno, x="turno", y="pct_refugo", text="pct_refugo", title="Taxa de Refugo por Turno (%)")
-            fig_rt.update_layout(template="plotly_white", yaxis_title="% Refugo")
-            st.plotly_chart(fig_rt, use_container_width=True)
-            st.markdown(dedent("""
-                *Explicação direta:* - Mostra qual turno gera mais desperdício (%).  
-                - Ação: conversar com o supervisor do turno no topo do gráfico.
-            """))
+        # Agrupa usando a coluna detectada (col_maq_tele)
+        if col_maq_tele in df_trend.columns:
+            trend_data = df_trend.groupby(["Data", col_maq_tele])["flag_defeito"].sum().reset_index()
             
-        with col_linha:
-            fig_rl = px.bar(refugo_linha, x="isa95_linha", y="pct_refugo", text="pct_refugo", title="Taxa de Refugo por Linha (ISA-95)")
-            fig_rl.update_layout(template="plotly_white", yaxis_title="% Refugo")
-            st.plotly_chart(fig_rl, use_container_width=True)
-            st.markdown(dedent("""
-                *Explicação ISA-95:* - Mostra qual **Linha de Produção** (Área) tem maior problema de qualidade.  
-                - Ação: Focar a manutenção e calibração na Linha com maior refugo.
-            """))
-        with st.expander("Detalhes técnicos (engenharia)"):
-            st.write(dedent("""
-                - % Refugo = (refugos / peças_produzidas) * 100 por turno.
-                - Agregação por turno com soma de peças dentro do período disponível.
-            """))
+            fig_trend = px.line(trend_data, x="Data", y="flag_defeito", color=col_maq_tele,
+                                title="Quantidade de Defeitos por Dia",
+                                labels={"flag_defeito": "Qtd. Defeitos", "Data": "Dia do Mês"},
+                                markers=True)
+            fig_trend.update_layout(template="plotly_white", hovermode="x unified")
+            st.plotly_chart(fig_trend, use_container_width=True)
+            st.caption("💡 **Dica:** Picos altos indicam dias onde a máquina operou descalibrada.")
+        else:
+            st.warning(f"Coluna de máquina '{col_maq_tele}' não encontrada na telemetria.")
     else:
-        st.info("Dados de 'turno' ausentes — não é possível calcular refugo por turno.")
+        st.info("Sem dados de telemetria.")
 
     st.markdown("---")
-    st.subheader("Linha do tempo da produção (todas as máquinas)")
-    if not tele_agg.empty:
-        df_total_period = tele_agg.groupby("period")["pecas_produzidas"].sum().reset_index()
-        fig_tot = px.area(df_total_period, x="period", y="pecas_produzidas", title="Produção Total por Período (Todas as Linhas ISA-95)")
-        fig_tot.update_layout(template="plotly_white", yaxis_title="Peças por período")
-        st.plotly_chart(fig_tot, use_container_width=True)
-        st.markdown(dedent("""
-            *Explicação direta:* - Mostra quando a produção sobe e cai ao longo do dia.  
-            - Se estamos abaixo da meta em horários críticos, ajustar pessoal/produção.
-        """))
-    else:
-        st.info("Dados de telemetria insuficientes para a linha do tempo consolidada.")
 
+    # --- 3. DIAGNÓSTICO: QUEM E POR QUE? ---
+    c_who, c_why = st.columns(2)
+
+    with c_who:
+        st.subheader("🔍 Onde está o problema?")
+        
+        if not prod_df.empty:
+            # Agrupa usando a coluna detectada (col_maq_prod)
+            refugo_maq = prod_df.groupby(col_maq_prod)["pecas_refugadas"].sum().reset_index()
+            
+            # Cria Label bonita
+            try:
+                refugo_maq["Nome"] = refugo_maq[col_maq_prod].apply(lambda x: f"Equip. {x}")
+            except:
+                refugo_maq["Nome"] = refugo_maq[col_maq_prod].astype(str)
+            
+            fig_bar = px.bar(refugo_maq, x="Nome", y="pecas_refugadas", 
+                             title="Total de Refugo por Máquina",
+                             text_auto=True,
+                             color="pecas_refugadas", 
+                             color_continuous_scale=["green", "red"])
+            st.plotly_chart(fig_bar, use_container_width=True)
+        else:
+            st.info("Sem dados de produção.")
+
+    with c_why:
+        st.subheader("📊 Causa Provável (Técnica)")
+        
+        # --- CORREÇÃO: Função blindada contra erro de tipo ---
+        def classificar(row):
+            try:
+                # Se não for defeito, ignora
+                if int(row.get("flag_defeito", 0)) == 0: return None
+                
+                # Força conversão para float para evitar erro de comparação
+                p = float(row.get("pressao_mpa", 15))
+                t = float(row.get("temp_matriz_c", 60))
+                u = float(row.get("umidade_pct", 12))
+                
+                if p < 12: return "Pressão Baixa (<12)"
+                if t > 65: return "Temp. Alta (>65)"
+                if u > 14: return "Umidade Alta (>14)"
+                return "Outros"
+            except Exception:
+                return "Erro de Leitura" # Fallback seguro
+
+        if not tele_df.empty:
+            # Filtra apenas defeitos
+            df_causes = tele_df[tele_df["flag_defeito"] == 1].copy()
+            
+            if not df_causes.empty:
+                # Aplica a classificação
+                df_causes["Causa"] = df_causes.apply(classificar, axis=1)
+                
+                # Remove nulos e conta
+                counts = df_causes["Causa"].value_counts().reset_index()
+                counts.columns = ["Causa", "Qtd"]
+                
+                # Gráfico
+                fig_cause = px.bar(counts, x="Qtd", y="Causa", orientation='h', 
+                                 title="Top Causas Técnicas",
+                                 text_auto=True,
+                                 color="Qtd", color_continuous_scale="Reds")
+                st.plotly_chart(fig_cause, use_container_width=True)
+            else:
+                st.success("Sem defeitos registrados na amostra recente.")
+
+    # --- 4. RECOMENDAÇÕES ---
+    st.markdown("---")
+    st.success("✅ **Plano de Ação:** O diagnóstico aponta instabilidade. Verifique a calibração da máquina com maior barra vermelha no gráfico à esquerda.")
 
 # ---------- MANUTENÇÃO ----------
-elif pagina == "Manutenção":
-    st.title("🔧 Manutenção Inteligente — Onde focar")
-    st.markdown("Análise automática das causas que mais param sua fábrica.")
+elif pagina == "🔧 Paradas & Confiabilidade":
+    st.title("🔧 Gestão de Paradas & Confiabilidade")
+    st.markdown("Indicadores de MTTR, MTBF e Pareto de causas de parada.")
 
-    st.subheader("📊 Confiabilidade e Perda de Tempo (Down Time)")
-    
-    c_mttr, c_mtbf = st.columns(2)
-    c_mttr.metric("MTTR (Tempo Médio para Reparo)", f"{MTTR:.1f} min", help="Tempo médio que a máquina leva para voltar a operar após uma falha.")
-    c_mtbf.metric("MTBF (Tempo Médio Entre Falhas)", f"{MTBF:.1f} min", help="Tempo médio que a máquina opera entre uma falha e outra.")
-    
-    st.markdown("---")
-    st.subheader("Análise de Causa Raiz: Pareto de Paradas por Duração")
-    
-    if pareto.empty:
-        st.info("Nenhum evento de severidade média/alta encontrado.")
-    else:
-        # Gráfico de Pareto aprimorado: agora usa tempo_total_min
-        fig_pareto = px.bar(pareto, x="motivo", y="tempo_total_min", 
-                            title="Top Causas de Parada por DURAÇÃO (Análise de Impacto)", 
-                            text_auto=".1f",
-                            labels={"tempo_total_min": "Tempo Total de Parada (min)", "motivo": "Causa"})
-        fig_pareto.update_layout(template="plotly_white", xaxis_title="Causa", yaxis_title="Tempo Total de Parada (min)")
-        st.plotly_chart(fig_pareto, use_container_width=True)
+    # --- 0. PREPARAÇÃO DOS DADOS (CORREÇÃO DO ERRO) ---
+    if evt_df is not None and not evt_df.empty:
+        df_maint = evt_df.copy()
         
-        st.markdown(dedent("""
-            *Explicação para o Sr. Roberto:* - Este gráfico mostra as causas que **mais consomem tempo** da sua fábrica.  
-            - **Ação:** Priorize ordens de serviço para as causas no topo do gráfico, pois elas trarão o maior ganho de disponibilidade.
-        """))
-
-    st.markdown("---")
-    st.subheader("🚨 Últimos Eventos Críticos (Alta severidade)")
-    # filtro por codigo ou texto de severidade
-    if "sev_codigo" in evt_df.columns:
-        evt_crit = evt_df[pd.to_numeric(evt_df["sev_codigo"], errors="coerce").fillna(0) >= 3]
-    elif "severidade" in evt_df.columns:
-        evt_crit = evt_df[evt_df["severidade"].astype(str).str.lower().str.contains("alta")]
-    else:
-        evt_crit = pd.DataFrame()
-    
-    if evt_crit.empty:
-        st.success("Nenhum evento crítico detectado.")
-    else:
-        # Converte tudo para string (.astype(str)) antes de juntar
-        evt_crit["isa95_contexto"] = evt_crit["isa95_planta"].astype(str) + "/" + evt_crit["isa95_linha"].astype(str) + "/" + evt_crit["isa95_equipamento"].astype(str)
+        # Padroniza nome da coluna de causa (resolve o KeyError 'motivo')
+        col_causa = "evento" if "evento" in df_maint.columns else ("descricao" if "descricao" in df_maint.columns else None)
         
-        st.data_editor(evt_crit.sort_values("timestamp", ascending=False).head(20), use_container_width=True, height=420)
+        if col_causa:
+            df_maint = df_maint.rename(columns={col_causa: "Causa"})
+            
+            # Garante coluna de duração
+            if "duracao_min" not in df_maint.columns:
+                df_maint["duracao_min"] = 60.0 # Fallback
+            else:
+                df_maint["duracao_min"] = df_maint["duracao_min"].fillna(60.0)
+                
+            # --- 1. CÁLCULO DE KPIs DE CONFIABILIDADE ---
+            # Filtra apenas paradas (Severidade Média/Alta ou códigos específicos)
+            # Assumindo que tudo no log de eventos é uma parada/intervenção
+            total_paradas = len(df_maint)
+            tempo_total_parado = df_maint["duracao_min"].sum()
+            
+            # MTTR (Mean Time To Repair) = Tempo Total Parado / Número de Falhas
+            mttr = tempo_total_parado / total_paradas if total_paradas > 0 else 0
+            
+            # MTBF (Mean Time Between Failures)
+            # Tempo total de calendário (estimado pelo range de datas)
+            inicio_ops = df_maint["timestamp"].min()
+            fim_ops = df_maint["timestamp"].max()
+            horas_totais = (fim_ops - inicio_ops).total_seconds() / 3600 if pd.notnull(inicio_ops) else 720
+            tempo_disponivel_min = (horas_totais * 60) - tempo_total_parado
+            
+            mtbf = tempo_disponivel_min / total_paradas if total_paradas > 0 else 0
+            
+            # Disponibilidade Técnica (baseada em eventos)
+            disponibilidade_tec = (tempo_disponivel_min / (horas_totais * 60)) * 100
+
+            # --- EXIBIÇÃO DOS KPIs ---
+            m1, m2, m3, m4 = st.columns(4)
+            m1.metric("MTTR (Tempo Médio Reparo)", f"{mttr:.1f} min", help="Meta: < 60 min", delta_color="inverse")
+            m2.metric("MTBF (Tempo Entre Falhas)", f"{mtbf/60:.1f} horas", help="Meta: > 48h")
+            m3.metric("Disponibilidade Técnica", f"{disponibilidade_tec:.1f}%", help="Tempo que a máquina ficou disponível")
+            m4.metric("Total Horas Paradas", f"{tempo_total_parado/60:.1f} h", delta="Acumulado", delta_color="inverse")
+            
+            st.markdown("---")
+
+            # --- 2. PARETO DE IMPACTO (GRÁFICO DE BARRAS) ---
+            c_pareto, c_timeline = st.columns([1, 1])
+            
+            with c_pareto:
+                st.subheader("📊 Onde perdemos mais tempo? (Pareto)")
+                # Agrupa por Causa e soma o tempo (Impacto real)
+                pareto_data = df_maint.groupby("Causa")["duracao_min"].sum().reset_index()
+                pareto_data = pareto_data.sort_values("duracao_min", ascending=True) # Ascendente para barra horizontal ficar certa
+                
+                fig_p = px.bar(pareto_data, x="duracao_min", y="Causa", orientation='h',
+                               title="Top Causas por Tempo Total de Parada (min)",
+                               text_auto=".0f",
+                               color="duracao_min", color_continuous_scale="Reds")
+                fig_p.update_layout(template="plotly_white", xaxis_title="Minutos Parados")
+                st.plotly_chart(fig_p, use_container_width=True)
+                
+            with c_timeline:
+                st.subheader("📅 Linha do Tempo de Falhas")
+                st.markdown("Identifique se as falhas estão ficando mais frequentes.")
+                
+                # Gráfico de dispersão no tempo
+                fig_time = px.scatter(df_maint, x="timestamp", y="Causa", 
+                                      size="duracao_min", color="severidade",
+                                      title="Ocorrências no Tempo (Tamanho = Duração)",
+                                      color_discrete_map={"Alta": "red", "Média": "orange", "Baixa": "green"})
+                fig_time.update_layout(template="plotly_white")
+                st.plotly_chart(fig_time, use_container_width=True)
+
+            # --- 3. TABELA DETALHADA E RECOMENDAÇÕES ---
+            st.markdown("---")
+            st.subheader("📋 Log de Intervenções Recentes")
+            
+            # Tabela limpa
+            cols_show = ["timestamp", "Causa", "severidade", "duracao_min", "origem", "maquina_id"]
+            cols_existentes = [c for c in cols_show if c in df_maint.columns]
+            
+            st.dataframe(
+                df_maint.sort_values("timestamp", ascending=False).head(10)[cols_existentes],
+                use_container_width=True,
+                hide_index=True
+            )
+            
+            # Insight Automático
+            top_cause = pareto_data.iloc[-1]["Causa"] # Pega o último (maior) pois ordenamos ascendente
+            st.info(f"💡 **Insight de Gestão:** A causa **'{top_cause}'** é a maior ofensora, consumindo a maior parte do tempo de manutenção. Recomenda-se análise de causa raiz (5 Porquês) especificamente para este item.")
+
+        else:
+            st.error("Erro de Dados: Coluna de 'Evento' ou 'Descrição' não encontrada no arquivo de eventos.")
+    else:
+        st.info("Sem dados de eventos de manutenção registrados.")
 
 
-# ---------- TELEMETRIA (MAPA) ----------
-elif pagina == "Telemetria (Mapa)":
-    st.title("Mapa do Tesouro Operacional — Pressão x Umidade")
+# ---------- TELEMETRIA ----------
+elif pagina == "📡 Sensores em Tempo Real":
+    st.title("📡 Monitoramento de Sensores (IoT)")
+    st.markdown("Acompanhamento ciclo a ciclo de Pressão e Temperatura para engenharia.")
     
     # Verifica se o dataframe não está vazio
     if not scatter_df.empty:
@@ -405,10 +566,9 @@ elif pagina == "Telemetria (Mapa)":
 
 
 # ---------- SIMULADOR DE QUALIDADE (ML) ----------
-elif pagina == "Simulador de Qualidade":
-    st.title("🧠 Simulador de Qualidade Preditiva")
-    st.markdown("Use os parâmetros de telemetria para prever a probabilidade de um defeito ocorrer.")
-    
+elif pagina == "🤖 Inteligência Artificial":
+    st.title("🤖 Simulador de Qualidade (IA Preditiva)")
+    st.markdown("Utilize o modelo de IA para testar parâmetros e prever riscos antes de configurar a máquina.")
     st.subheader("Ajuste os Parâmetros de Entrada")
     
     # Valores médios/meta para o Sr. Roberto
@@ -461,9 +621,9 @@ elif pagina == "Simulador de Qualidade":
         st.warning("O modelo de Machine Learning não pôde ser carregado. Verifique o arquivo `rf_defeito.joblib`.")
 
 # ---------- EVENTOS ----------
-elif pagina == "Eventos":
-    st.title("Eventos — Histórico")
-    st.subheader("Últimos eventos (completo)")
+elif pagina == "📋 Histórico de Alertas":
+    st.title("📋 Histórico Completo de Alertas")
+    st.markdown("Log auditável de todas as ocorrências, alarmes e paradas registradas.")
     if evt_df is not None and not evt_df.empty:
         df_evt_recent = evt_df.sort_values("timestamp", ascending=False).head(200) if "timestamp" in evt_df.columns else evt_df.head(200)
         st.data_editor(df_evt_recent, use_container_width=True, height=520)

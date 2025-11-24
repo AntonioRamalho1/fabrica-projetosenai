@@ -20,7 +20,9 @@ print("=" * 60)
 # 1. CONFIGURAÇÃO DE CAMINHOS
 # =============================================
 BASE_DIR = Path(__file__).parent
-DATA_DIR = BASE_DIR / "app" / "data" / "processed"
+
+# CORREÇÃO: Mudado de "processed" para "silver"
+DATA_DIR = BASE_DIR / "app" / "data" / "silver" 
 MODEL_DIR = BASE_DIR / "app" / "models"
 
 # Cria pasta de modelos se não existir

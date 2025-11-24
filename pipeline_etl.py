@@ -83,35 +83,42 @@ def process_producao(prod_raw: pd.DataFrame) -> pd.DataFrame:
     
     return prod
 
-def process_eventos(evt_raw: pd.DataFrame) -> pd.DataFrame:
-    """
-    Processa os dados brutos de eventos (Bronze) para a camada Silver.
-    - Renomeia colunas para padronização.
-    - Converte tipos de dados.
-    """
-    print("Processando Eventos (Bronze -> Silver)...")
-    evt = evt_raw.copy()
-    
-    # Padronização de nomes
-    evt.columns = [col.lower().replace(" ", "_").replace("(", "").replace(")", "").replace(".", "_") for col in evt.columns]
-    
-    # Renomear colunas chave
-    evt = evt = evt.rename(columns={
-        "timestamp": "timestamp",
-        "maquina": "maquina_id",
-        "evento": "evento",
-        "severidade": "severidade",
-        "sev_codigo": "sev_codigo"
-    })
-    
-    # Conversão de tipos
+def process_eventos(evt: pd.DataFrame) -> pd.DataFrame:
+    evt = evt.copy()
+
+    # Normaliza timestamp
     evt["timestamp"] = pd.to_datetime(evt["timestamp"], errors="coerce")
-    evt = evt.dropna(subset=["timestamp"])
-    
-    # Garantir que sev_codigo é numérico para filtros
-    evt["sev_codigo"] = pd.to_numeric(evt["sev_codigo"], errors="coerce").fillna(0).astype(int)
-    
+
+    # Padroniza nomes
+    evt.rename(columns={
+        "evento_id": "id_evento",
+        "maquina_id": "id_maquina",
+        "evento": "descricao",
+        "severidade": "severidade_texto",
+        "origem": "sistema_origem"
+    }, inplace=True)
+
+    # Converte severidade textual para código numérico
+    mapa_sev = {
+        "Baixa": 1,
+        "Média": 2,
+        "Media": 2,    # caso venha sem acento
+        "Alta": 3
+    }
+
+    evt["severidade"] = evt["severidade_texto"].map(mapa_sev).fillna(0).astype(int)
+
+    # Ordena por tempo
+    evt.sort_values("timestamp", inplace=True)
+
+    # Garante tipos seguros
+    evt["id_evento"] = evt["id_evento"].astype(str)
+    evt["id_maquina"] = evt["id_maquina"].astype(int)
+    evt["descricao"] = evt["descricao"].astype(str)
+    evt["sistema_origem"] = evt["sistema_origem"].astype(str)
+
     return evt
+
 
 # --- Funções de Processamento (Silver -> Gold) ---
 

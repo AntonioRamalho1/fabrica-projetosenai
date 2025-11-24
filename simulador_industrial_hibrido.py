@@ -9,10 +9,21 @@ import os
 # CONFIGURAÇÕES DE PASTA
 # =============================================
 # Caminho exato para não quebrar seu projeto
-OUTPUT_DIR = r"C:\Users\anaca\OneDrive\Área de Trabalho\projetosenai\app\data\raw"
+# =============================================
+# CONFIGURAÇÕES DE PASTA (AUTOMÁTICA)
+# =============================================
+import os
+
+# Pega o diretório onde este script está rodando
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+# Monta o caminho relativo: ./app/data/raw
+OUTPUT_DIR = os.path.join(BASE_DIR, "app", "data", "raw")
+
+# Cria a pasta se não existir
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
-print(f"📂 Diretório de saída: {OUTPUT_DIR}")
+print(f"📂 Diretório de saída configurado: {OUTPUT_DIR}")
 
 # =============================================
 # CONFIGURAÇÕES DA FÁBRICA
@@ -126,44 +137,59 @@ def aplicar_anomalia_temp(valor):
     return valor
 
 # =============================================
-# 2) TELEMETRIA DETALHADA (30 dias) - CORRELAÇÃO DE DEFEITOS
+# 2) TELEMETRIA DETALHADA (30 dias) - CENÁRIO REALISTA (INSTABILIDADE)
 # =============================================
-print("⚡ Gerando telemetria detalhada...")
+print("⚡ Gerando telemetria com instabilidade realista...")
 
 telemetria = []
 t = DATA_INICIO_TELEMETRIA
-inicio_falha = DATA_INICIO_TELEMETRIA + timedelta(days=12)
+
+# Não existe mais "data de início da falha". O problema é aleatório/crônico.
 
 while t <= DATA_FIM:
     for m in range(1, NUM_MAQUINAS + 1):
-        if not (2 <= t.hour < 5): # Pausa na madrugada
+        # A fábrica para de madrugada (02h as 05h)
+        if not (2 <= t.hour < 5): 
 
-            # Degradação progressiva simulada
-            fator_falha = 0
-            if t > inicio_falha:
-                horas_falha = (t - inicio_falha).total_seconds() / 3600
-                fator_falha = min(4.0, horas_falha * 0.08)
+            # --- PERSONALIDADE DA MÁQUINA NA TELEMETRIA ---
+            if m == 1:
+                # Máquina 1 (Boa): Pressão estável, varia pouco
+                # Média 15 MPa, Desvio 0.5 (Bem precisa)
+                pressao = np.random.normal(META_PRESSAO, 0.5)
+                
+                # Temperatura controlada (Média 60, varia 1.5)
+                temp_real = np.random.normal(META_TEMP, 1.5)
+                
+                # Umidade consistente
+                umidade = np.random.normal(META_UMIDADE, 0.5)
+                
+            else:
+                # Máquina 2 (Instável): A pressão "samba" muito
+                # Média um pouco menor (14.5) e Desvio ENORME (2.5)
+                # Isso faz ela cair abaixo de 12 (defeito) várias vezes ao dia, aleatoriamente
+                pressao = np.random.normal(14.5, 2.5)
+                
+                # Superaquecimento aleatório (picos de calor)
+                if random.random() < 0.1: # 10% do tempo ela esquenta
+                    temp_real = np.random.normal(75.0, 3.0)
+                else:
+                    temp_real = np.random.normal(62.0, 2.0)
+                
+                # Umidade varia mais
+                umidade = np.random.normal(META_UMIDADE, 1.5)
 
-            pressao = np.random.normal(META_PRESSAO - fator_falha, 0.5)
-            umidade = np.random.normal(META_UMIDADE, 0.8)
-            temp_real = round(np.random.normal(META_TEMP, 1.7), 1)
+            # Aplica sujeira na temperatura (sensor falhando as vezes)
+            temperatura_final = aplicar_anomalia_temp(round(temp_real, 1))
 
-            # Aplica sujeira na temperatura
-            temperatura_final = aplicar_anomalia_temp(temp_real)
-
-            # --- MELHORIA 2: CORRELAÇÃO TEMPERATURA X DEFEITO ---
+            # --- REGRA FÍSICA DE DEFEITO ---
             flag = 0
             
-            # Verifica se temperatura é número para aplicar regra lógica
-            temp_valida = temp_real # Usa o valor real para a regra física
-            if isinstance(temperatura_final, (int, float)) and not isinstance(temperatura_final, bool):
-                 temp_valida = temperatura_final # Se não for sujeira, usa o valor do sensor
-
-            # Regra de Ouro da Qualidade:
-            if pressao < 11.5 or umidade > 14.5 or temp_valida > 68.0:
+            # Se a pressão cair muito (<12) OU esquentar demais (>70) = DEFEITO
+            # Como a Máq 2 tem desvio alto (2.5), ela vai cair < 12 com frequência
+            if pressao < 12.0 or umidade > 14.5 or temp_real > 70.0:
                 flag = 1
             
-            # Se o sensor de temperatura falhou (sujeira), consideramos risco/alerta
+            # Se o sensor de temperatura falhou (sujeira), também marca alerta
             if temperatura_final in anomalias_temp:
                 flag = 1 
 
@@ -183,7 +209,7 @@ while t <= DATA_FIM:
 df_tel = pd.DataFrame(telemetria)
 path_tel = os.path.join(OUTPUT_DIR, "telemetria_detalhada_30dias.csv")
 df_tel.to_csv(path_tel, index=False)
-print(f"✔ telemetria_detalhada_30dias.csv gerado")
+print(f"✔ telemetria_detalhada_30dias.csv gerado (Cenário Instável)")
 
 # =============================================
 # 3) EVENTOS INDUSTRIAIS - COM IDs ÚNICOS
