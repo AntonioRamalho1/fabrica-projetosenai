@@ -38,6 +38,8 @@ O **EcoData Monitor 4.0** é uma PoC (Prova de Conceito) desenvolvida para o pro
 ✅ **Dashboard interativo**  
 ✅ **Predição de defeitos com IA (98% de acurácia)**  
 ✅ **Sistema de observabilidade industrial**  
+✅ **Modelagem ISA-95** (Contextualização de dados industriais)
+✅ **DataOps Industrial** (Validação e Governança de Dados)
 
 ---
 
@@ -60,13 +62,14 @@ graph TB
         A3 --> B3[(eventos_raw.csv)]
     end
 
-    subgraph "⚙️ PIPELINE ETL"
+    subgraph "⚙️ PIPELINE ETL (DataOps)"
         B1 --> C[pipeline_etl.py]
         B2 --> C
         B3 --> C
         C -->|Validação| C1[Schema Check]
         C -->|Outliers| C2[IQR + Z-Score]
-        C -->|Particionamento| C3[Parquet]
+        C -->|Contextualização| C3[ISA-95]
+        C -->|Particionamento| C4[Parquet]
     end
 
     subgraph "🥈 CAMADA SILVER"
@@ -88,7 +91,6 @@ graph TB
         D1 --> H[AlertDetector]
         H --> I1[📧 Email]
         H --> I2[💬 WhatsApp]
-        H --> I3[🔔 Teams]
     end
 
     subgraph "📊 DASHBOARD"
@@ -104,7 +106,7 @@ graph TB
 | Camada | Descrição | Conteúdo |
 |--------|-----------|----------|
 | 🥉 **Bronze** | Dados brutos | CSV com erros, inconsistências, dados sujos |
-| 🥈 **Silver** | Dados limpos | Padronizados, validados, sem outliers |
+| 🥈 **Silver** | Dados limpos | Padronizados, validados, enriquecidos com **ISA-95** |
 | 🥇 **Gold** | Dados agregados | KPIs de negócio, métricas diárias |
 
 ---
@@ -129,13 +131,14 @@ graph TB
 3. 🥉 Umidade (%) - 20%
 4. 🏅 Ciclo (s) - 10%
 
-### 2️⃣ **Engenharia de Dados Profissional**
+### 2️⃣ **Engenharia de Dados Profissional (DataOps)**
 
 - **Validação de Schema**: Checks automáticos de estrutura
 - **Detecção de Outliers**: IQR + Z-Score
 - **Parquet Particionado**: Escalabilidade para Big Data
 - **Métricas de Qualidade**: Relatórios JSON detalhados
 - **Logging Estruturado**: Rastreabilidade completa
+- **Contextualização ISA-95**: Aplicação da hierarquia industrial (Empresa → Equipamento)
 
 ### 3️⃣ **Sistema de Alertas com Observabilidade**
 
@@ -146,11 +149,10 @@ graph TB
 - 🔄 **Persistência**: 3+ pontos consecutivos
 
 #### Canais de Notificação:
-- 📧 **Email**: Alertas HIGH e CRITICAL
-- 💬 **WhatsApp**: Apenas CRITICAL
-- 🔔 **Microsoft Teams**: HIGH e CRITICAL
+- 📧 **Email**: Envio de relatórios executivos e alertas HIGH/CRITICAL.
+- 💬 **WhatsApp**: Compartilhamento instantâneo de resumos operacionais e alertas críticos.
 
-### 4️⃣ **Código com Cara de Produto**
+### 4️⃣ **Código com Cara de Produto (CLI)**
 
 ```bash
 # Instalação como pacote Python
@@ -220,7 +222,7 @@ cd fabrica-projetosenai
 pip install -r requirements.txt
 ```
 
-### Opção 2: Instalação como Pacote
+### Opção 2: Instalação como Pacote (Recomendado)
 
 ```bash
 # Instala o projeto como pacote Python
@@ -433,7 +435,6 @@ alerts:
   notifications:
     email: ["operacao@fabrica.com"]
     whatsapp: ["+55 81 99999-9999"]
-    teams: ["Operações Fábrica"]
 ```
 
 ### Exemplo de Alerta
@@ -502,26 +503,7 @@ Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para ma
 
 ## 👤 Autor
 
-**Antonio Cazé Ramalho**
+**Antonio Ramalho**
 
-- LinkedIn: [Antonio Ramalho](https://linkedin.com/in/antonio-ramalho)
-- GitHub: [@AntonioRamalho1](https://github.com/AntonioRamalho1)
-
----
-
-## 🏆 Reconhecimentos
-
-Desenvolvido como **Prova de Conceito** para o processo seletivo do:
-
-**SENAI/PE – Centro de Desenvolvimento de Competências – Indústria Digital**
-
----
-
-<p align="center">
-  <strong>Desenvolvido em Novembro de 2025</strong><br>
-  Focado em impacto real, engenharia de dados e automação industrial
-</p>
-
-<p align="center">
-  ⭐ Se este projeto foi útil, considere dar uma estrela!
-</p>
+[![Email](https://img.shields.io/badge/Email-antonioramlho10%40gmail.com-D14836?style=flat&logo=gmail&logoColor=white)](mailto:antonioramlho10@gmail.com)
+[![GitHub](https://img.shields.io/badge/GitHub-AntonioRamalho1-181717?style=flat&logo=github&logoColor=white)](https://github.com/AntonioRamalho1)
