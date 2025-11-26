@@ -1,0 +1,83 @@
+# =============================================
+# CONFIGURAÇÃO DO ECODATA MONITOR 4.0
+# =============================================
+
+project:
+  name: "EcoData Monitor 4.0"
+  version: "1.0.0"
+  factory_name: "EcoTijolos"
+
+# --- SIMULADOR INDUSTRIAL ---
+simulator:
+  telemetry_days: 30
+  production_history_years: 1
+  
+  machines:
+    - id: 1
+      name: "Prensa 01"
+      capacity: 1000
+      reliability: 0.95
+    - id: 2
+      name: "Prensa 02"
+      capacity: 800  # 20% menor
+      reliability: 0.85
+  
+  operating_parameters:
+    pressure:
+      mean: 15.0
+      std: 1.2
+      min: 10.0
+      max: 20.0
+    humidity:
+      mean: 12.0
+      std: 1.5
+      min: 5.0
+      max: 20.0
+    temperature:
+      mean: 60.0
+      std: 5.0
+      min: 40.0
+      max: 80.0
+    cycle_time:
+      mean: 7.0
+      std: 0.2
+
+  seasonality:
+    enable: true
+
+# --- PIPELINE ETL ---
+etl:
+  paths:
+    raw: "app/data/raw"
+    silver: "app/data/silver"
+    gold: "app/data/gold"
+  
+  data_quality:
+    min_completeness: 0.95
+
+# --- MACHINE LEARNING ---
+ml:
+  model:
+    algorithm: "random_forest"
+    n_estimators: 200
+    max_depth: 12
+  
+  thresholds:
+    low_risk: 0.20    # Abaixo de 20% é verde
+    high_risk: 0.50   # Acima de 50% é vermelho
+
+# --- ALERTAS & LIMITES (Para o Dashboard) ---
+alerts:
+  safety_limits:
+    pressure: {min: 12.0, max: 18.0} # Abaixo de 12 é falha
+    temperature: {min: 50.0, max: 70.0}
+    humidity: {min: 10.0, max: 14.0}
+
+# --- KPIs DE NEGÓCIO ---
+kpis:
+  costs:
+    sales_price: 1.20      # Preço de Venda
+    cost_per_piece: 0.45   # Custo Estimado
+  
+  oee:
+    target: 0.85

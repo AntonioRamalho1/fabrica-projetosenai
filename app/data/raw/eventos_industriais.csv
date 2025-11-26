@@ -1,0 +1,201 @@
+evento_id,timestamp,maquina_id,topico_uns,evento,severidade,origem
+EVT-20250001,2025-09-05 19:04:57.675014,1,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_02,Falha de Pressão,Média,SCADA
+EVT-20250002,2025-11-03 11:04:57.675014,1,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_02,Parada Programada,Média,Operador
+EVT-20250003,2025-09-12 18:04:57.675014,2,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_01,Sobrecarga Elétrica,Alta,Sensor
+EVT-20250004,2025-11-22 02:04:57.675014,1,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_02,Parada Programada,Alta,SCADA
+EVT-20250005,2025-10-31 03:04:57.675014,2,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_02,Baixa Umidade,Alta,Operador
+EVT-20250006,2025-07-04 15:04:57.675014,2,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_01,Parada Programada,Baixa,SCADA
+EVT-20250007,2025-11-03 20:04:57.675014,2,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_02,Falha de Motor,Média,SCADA
+EVT-20250008,2025-04-07 09:04:57.675014,1,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_02,Parada Programada,Baixa,Operador
+EVT-20250009,2025-07-26 09:04:57.675014,2,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_02,Falha de Pressão,Baixa,Sensor
+EVT-20250010,2025-07-17 19:04:57.675014,1,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_02,Baixa Umidade,Média,Sensor
+EVT-20250011,2025-07-25 21:04:57.675014,1,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_02,Falha de Motor,Média,Sensor
+EVT-20250012,2025-06-13 05:04:57.675014,2,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_02,Baixa Umidade,Baixa,Operador
+EVT-20250013,2025-08-27 21:04:57.675014,2,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_01,Parada Programada,Baixa,SCADA
+EVT-20250014,2025-05-18 19:04:57.675014,2,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_01,Parada Programada,Média,Sensor
+EVT-20250015,2025-03-01 12:04:57.675014,1,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_01,Falha de Pressão,Média,Sensor
+EVT-20250016,2024-12-11 21:04:57.675014,1,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_02,Parada Programada,Alta,SCADA
+EVT-20250017,2025-09-08 11:04:57.675014,2,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_01,Parada Programada,Baixa,Sensor
+EVT-20250018,2025-10-16 02:04:57.675014,2,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_01,Falha de Motor,Média,Operador
+EVT-20250019,2025-11-13 12:04:57.675014,1,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_02,Parada Programada,Média,Sensor
+EVT-20250020,2025-08-05 09:04:57.675014,1,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_01,Falha de Pressão,Alta,Sensor
+EVT-20250021,2025-06-26 20:04:57.675014,1,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_01,Falha de Pressão,Média,Operador
+EVT-20250022,2025-09-17 21:04:57.675014,2,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_01,Falha de Pressão,Baixa,Operador
+EVT-20250023,2025-07-27 19:04:57.675014,2,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_01,Parada Programada,Baixa,SCADA
+EVT-20250024,2025-10-19 05:04:57.675014,1,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_01,Baixa Umidade,Média,Operador
+EVT-20250025,2025-06-24 18:04:57.675014,1,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_01,Falha de Motor,Média,SCADA
+EVT-20250026,2025-02-27 11:04:57.675014,1,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_01,Baixa Umidade,Média,Operador
+EVT-20250027,2025-11-18 14:04:57.675014,2,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_02,Falha de Motor,Média,SCADA
+EVT-20250028,2025-07-02 15:04:57.675014,1,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_01,Falha de Pressão,Média,Sensor
+EVT-20250029,2025-10-09 08:04:57.675014,2,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_02,Falha de Pressão,Alta,Operador
+EVT-20250030,2024-12-16 02:04:57.675014,2,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_02,Sobrecarga Elétrica,Média,Sensor
+EVT-20250031,2025-06-06 02:04:57.675014,1,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_02,Baixa Umidade,Baixa,Operador
+EVT-20250032,2025-08-03 07:04:57.675014,2,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_02,Falha de Motor,Baixa,Operador
+EVT-20250033,2025-06-18 10:04:57.675014,1,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_02,Falha de Pressão,Média,SCADA
+EVT-20250034,2025-06-07 05:04:57.675014,2,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_02,Baixa Umidade,Média,Sensor
+EVT-20250035,2025-02-11 00:04:57.675014,2,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_02,Sobrecarga Elétrica,Baixa,Operador
+EVT-20250036,2025-10-31 20:04:57.675014,1,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_02,Falha de Motor,Média,Sensor
+EVT-20250037,2025-11-03 08:04:57.675014,1,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_01,Parada Programada,Baixa,Operador
+EVT-20250038,2025-01-12 09:04:57.675014,1,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_02,Sobrecarga Elétrica,Alta,Sensor
+EVT-20250039,2025-03-20 23:04:57.675014,1,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_01,Baixa Umidade,Alta,SCADA
+EVT-20250040,2025-11-23 08:04:57.675014,2,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_02,Falha de Pressão,Alta,Operador
+EVT-20250041,2024-12-13 00:04:57.675014,2,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_01,Baixa Umidade,Baixa,SCADA
+EVT-20250042,2024-11-28 00:04:57.675014,2,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_01,Baixa Umidade,Baixa,Sensor
+EVT-20250043,2025-09-15 03:04:57.675014,2,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_02,Parada Programada,Média,Operador
+EVT-20250044,2025-09-04 03:04:57.675014,1,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_02,Parada Programada,Baixa,Operador
+EVT-20250045,2025-01-18 10:04:57.675014,2,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_02,Baixa Umidade,Média,Operador
+EVT-20250046,2025-03-29 22:04:57.675014,1,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_01,Falha de Motor,Alta,Sensor
+EVT-20250047,2025-01-10 03:04:57.675014,1,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_01,Baixa Umidade,Alta,Operador
+EVT-20250048,2025-08-01 08:04:57.675014,2,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_01,Falha de Pressão,Média,Operador
+EVT-20250049,2025-08-28 18:04:57.675014,2,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_02,Baixa Umidade,Alta,Sensor
+EVT-20250050,2025-09-20 05:04:57.675014,2,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_01,Parada Programada,Alta,Operador
+EVT-20250051,2025-04-02 17:04:57.675014,2,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_02,Baixa Umidade,Média,Operador
+EVT-20250052,2024-11-25 21:04:57.675014,1,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_02,Parada Programada,Alta,SCADA
+EVT-20250053,2025-05-25 20:04:57.675014,1,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_01,Falha de Pressão,Alta,Operador
+EVT-20250054,2025-09-02 22:04:57.675014,2,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_02,Parada Programada,Alta,SCADA
+EVT-20250055,2025-08-10 15:04:57.675014,1,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_01,Sobrecarga Elétrica,Baixa,SCADA
+EVT-20250056,2025-06-28 00:04:57.675014,1,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_02,Falha de Pressão,Baixa,SCADA
+EVT-20250057,2025-03-22 23:04:57.675014,2,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_02,Sobrecarga Elétrica,Média,Sensor
+EVT-20250058,2025-09-20 08:04:57.675014,2,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_02,Sobrecarga Elétrica,Média,Operador
+EVT-20250059,2025-03-28 00:04:57.675014,1,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_01,Falha de Motor,Baixa,Operador
+EVT-20250060,2025-05-11 04:04:57.675014,2,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_02,Sobrecarga Elétrica,Alta,Sensor
+EVT-20250061,2025-02-02 22:04:57.675014,2,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_01,Falha de Pressão,Média,Sensor
+EVT-20250062,2025-06-05 02:04:57.675014,2,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_02,Baixa Umidade,Média,SCADA
+EVT-20250063,2025-03-15 06:04:57.675014,2,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_02,Sobrecarga Elétrica,Baixa,SCADA
+EVT-20250064,2025-03-17 04:04:57.675014,1,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_02,Falha de Pressão,Média,Operador
+EVT-20250065,2024-12-08 21:04:57.675014,1,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_02,Falha de Pressão,Média,Sensor
+EVT-20250066,2025-10-01 23:04:57.675014,2,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_02,Falha de Motor,Baixa,Operador
+EVT-20250067,2025-06-29 10:04:57.675014,2,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_01,Falha de Pressão,Média,Sensor
+EVT-20250068,2025-03-04 09:04:57.675014,1,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_02,Falha de Pressão,Média,SCADA
+EVT-20250069,2025-08-13 18:04:57.675014,1,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_01,Falha de Motor,Alta,Sensor
+EVT-20250070,2025-02-10 06:04:57.675014,1,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_01,Falha de Pressão,Média,SCADA
+EVT-20250071,2025-03-10 15:04:57.675014,2,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_02,Baixa Umidade,Baixa,Sensor
+EVT-20250072,2025-05-06 15:04:57.675014,1,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_01,Baixa Umidade,Média,SCADA
+EVT-20250073,2025-05-26 07:04:57.675014,1,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_01,Parada Programada,Baixa,Sensor
+EVT-20250074,2025-09-12 01:04:57.675014,2,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_01,Baixa Umidade,Alta,Operador
+EVT-20250075,2025-06-07 06:04:57.675014,2,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_01,Sobrecarga Elétrica,Alta,SCADA
+EVT-20250076,2025-04-22 04:04:57.675014,2,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_02,Falha de Pressão,Alta,Operador
+EVT-20250077,2025-06-01 23:04:57.675014,2,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_02,Parada Programada,Baixa,Sensor
+EVT-20250078,2025-03-04 14:04:57.675014,2,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_02,Falha de Pressão,Alta,Operador
+EVT-20250079,2025-01-03 18:04:57.675014,1,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_01,Falha de Motor,Alta,Sensor
+EVT-20250080,2025-06-21 03:04:57.675014,1,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_01,Falha de Motor,Baixa,Operador
+EVT-20250081,2024-11-26 18:04:57.675014,1,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_02,Baixa Umidade,Baixa,Sensor
+EVT-20250082,2025-05-04 22:04:57.675014,1,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_01,Baixa Umidade,Baixa,Sensor
+EVT-20250083,2025-10-30 09:04:57.675014,1,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_01,Parada Programada,Média,Operador
+EVT-20250084,2025-10-28 20:04:57.675014,1,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_01,Sobrecarga Elétrica,Alta,Sensor
+EVT-20250085,2025-06-28 09:04:57.675014,2,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_01,Baixa Umidade,Alta,SCADA
+EVT-20250086,2025-07-05 04:04:57.675014,2,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_01,Parada Programada,Alta,Sensor
+EVT-20250087,2025-08-22 07:04:57.675014,2,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_01,Parada Programada,Alta,Sensor
+EVT-20250088,2025-05-19 17:04:57.675014,1,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_02,Falha de Pressão,Média,Operador
+EVT-20250089,2024-12-01 14:04:57.675014,2,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_01,Sobrecarga Elétrica,Alta,Operador
+EVT-20250090,2025-07-07 07:04:57.675014,2,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_01,Baixa Umidade,Média,Operador
+EVT-20250091,2025-07-03 22:04:57.675014,1,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_02,Baixa Umidade,Média,Operador
+EVT-20250092,2025-07-26 23:04:57.675014,2,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_01,Falha de Motor,Alta,Operador
+EVT-20250093,2025-04-19 16:04:57.675014,2,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_02,Falha de Motor,Média,Operador
+EVT-20250094,2025-01-03 05:04:57.675014,1,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_01,Baixa Umidade,Baixa,SCADA
+EVT-20250095,2025-07-27 04:04:57.675014,1,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_01,Baixa Umidade,Alta,Operador
+EVT-20250096,2025-09-15 07:04:57.675014,1,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_01,Baixa Umidade,Alta,Sensor
+EVT-20250097,2025-07-28 11:04:57.675014,2,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_01,Parada Programada,Média,Operador
+EVT-20250098,2025-04-20 12:04:57.675014,1,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_01,Falha de Pressão,Média,SCADA
+EVT-20250099,2025-11-09 18:04:57.675014,2,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_01,Sobrecarga Elétrica,Alta,SCADA
+EVT-20250100,2025-09-20 00:04:57.675014,2,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_01,Falha de Motor,Alta,Sensor
+EVT-20250101,2025-06-23 17:04:57.675014,2,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_01,Sobrecarga Elétrica,Alta,Sensor
+EVT-20250102,2025-08-24 18:04:57.675014,1,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_01,Parada Programada,Baixa,SCADA
+EVT-20250103,2025-08-05 23:04:57.675014,2,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_01,Baixa Umidade,Baixa,Sensor
+EVT-20250104,2025-04-06 20:04:57.675014,2,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_01,Falha de Motor,Baixa,SCADA
+EVT-20250105,2024-12-30 19:04:57.675014,1,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_01,Baixa Umidade,Média,Sensor
+EVT-20250106,2025-07-09 06:04:57.675014,1,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_02,Falha de Motor,Média,Sensor
+EVT-20250107,2025-03-25 18:04:57.675014,1,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_01,Sobrecarga Elétrica,Baixa,Operador
+EVT-20250108,2025-03-24 20:04:57.675014,2,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_01,Parada Programada,Alta,Operador
+EVT-20250109,2025-02-13 00:04:57.675014,1,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_02,Falha de Motor,Baixa,Sensor
+EVT-20250110,2024-12-02 09:04:57.675014,1,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_01,Falha de Motor,Média,SCADA
+EVT-20250111,2025-04-04 10:04:57.675014,1,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_02,Baixa Umidade,Alta,Operador
+EVT-20250112,2025-10-29 21:04:57.675014,2,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_01,Baixa Umidade,Média,Operador
+EVT-20250113,2025-11-24 03:04:57.675014,2,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_01,Sobrecarga Elétrica,Média,Operador
+EVT-20250114,2025-11-13 10:04:57.675014,2,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_01,Falha de Pressão,Baixa,Sensor
+EVT-20250115,2025-05-11 00:04:57.675014,1,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_01,Falha de Pressão,Baixa,Sensor
+EVT-20250116,2025-06-08 14:04:57.675014,2,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_01,Falha de Motor,Alta,SCADA
+EVT-20250117,2025-07-19 12:04:57.675014,1,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_02,Sobrecarga Elétrica,Alta,Sensor
+EVT-20250118,2025-03-31 20:04:57.675014,1,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_02,Parada Programada,Alta,Operador
+EVT-20250119,2025-01-17 15:04:57.675014,2,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_01,Sobrecarga Elétrica,Média,SCADA
+EVT-20250120,2025-04-17 15:04:57.675014,1,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_02,Sobrecarga Elétrica,Média,Operador
+EVT-20250121,2025-09-14 16:04:57.675014,1,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_02,Baixa Umidade,Média,Sensor
+EVT-20250122,2025-05-02 20:04:57.675014,1,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_02,Baixa Umidade,Alta,Operador
+EVT-20250123,2025-06-15 01:04:57.675014,2,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_02,Sobrecarga Elétrica,Baixa,Operador
+EVT-20250124,2025-04-08 21:04:57.675014,1,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_01,Parada Programada,Média,Operador
+EVT-20250125,2025-11-06 10:04:57.675014,1,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_02,Parada Programada,Baixa,SCADA
+EVT-20250126,2025-01-24 04:04:57.675014,1,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_02,Falha de Motor,Média,Operador
+EVT-20250127,2025-09-13 05:04:57.675014,1,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_02,Baixa Umidade,Média,SCADA
+EVT-20250128,2025-11-15 18:04:57.675014,1,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_01,Falha de Pressão,Baixa,Operador
+EVT-20250129,2025-05-05 02:04:57.675014,2,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_02,Baixa Umidade,Alta,Operador
+EVT-20250130,2024-12-18 19:04:57.675014,1,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_02,Baixa Umidade,Baixa,Operador
+EVT-20250131,2025-01-26 15:04:57.675014,1,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_02,Falha de Pressão,Média,Operador
+EVT-20250132,2025-04-15 06:04:57.675014,1,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_02,Sobrecarga Elétrica,Baixa,Operador
+EVT-20250133,2024-12-31 07:04:57.675014,1,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_01,Baixa Umidade,Baixa,Operador
+EVT-20250134,2025-06-01 15:04:57.675014,2,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_01,Baixa Umidade,Baixa,Sensor
+EVT-20250135,2025-03-12 22:04:57.675014,2,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_01,Sobrecarga Elétrica,Baixa,Sensor
+EVT-20250136,2025-10-12 17:04:57.675014,2,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_01,Falha de Pressão,Média,Operador
+EVT-20250137,2025-10-24 03:04:57.675014,2,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_01,Baixa Umidade,Média,Operador
+EVT-20250138,2024-12-14 00:04:57.675014,1,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_01,Falha de Motor,Média,SCADA
+EVT-20250139,2024-12-12 19:04:57.675014,1,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_01,Baixa Umidade,Alta,SCADA
+EVT-20250140,2025-05-28 08:04:57.675014,1,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_02,Parada Programada,Baixa,SCADA
+EVT-20250141,2025-03-24 06:04:57.675014,2,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_01,Parada Programada,Baixa,Operador
+EVT-20250142,2025-08-23 06:04:57.675014,1,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_02,Parada Programada,Alta,SCADA
+EVT-20250143,2025-09-19 04:04:57.675014,2,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_02,Sobrecarga Elétrica,Baixa,Operador
+EVT-20250144,2025-04-11 20:04:57.675014,1,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_02,Falha de Motor,Média,Sensor
+EVT-20250145,2025-06-16 13:04:57.675014,1,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_02,Sobrecarga Elétrica,Baixa,Operador
+EVT-20250146,2025-01-18 08:04:57.675014,1,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_02,Sobrecarga Elétrica,Alta,Sensor
+EVT-20250147,2024-11-26 13:04:57.675014,2,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_01,Baixa Umidade,Baixa,Operador
+EVT-20250148,2025-03-10 10:04:57.675014,2,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_02,Baixa Umidade,Baixa,Operador
+EVT-20250149,2025-04-08 08:04:57.675014,1,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_01,Baixa Umidade,Média,Operador
+EVT-20250150,2025-08-19 10:04:57.675014,2,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_01,Sobrecarga Elétrica,Alta,Operador
+EVT-20250151,2025-10-06 22:04:57.675014,2,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_02,Falha de Pressão,Alta,Operador
+EVT-20250152,2025-06-02 17:04:57.675014,1,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_01,Falha de Motor,Baixa,SCADA
+EVT-20250153,2025-01-21 00:04:57.675014,1,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_02,Sobrecarga Elétrica,Alta,Operador
+EVT-20250154,2025-07-20 03:04:57.675014,1,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_02,Falha de Motor,Média,SCADA
+EVT-20250155,2025-04-17 10:04:57.675014,1,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_01,Falha de Motor,Média,Operador
+EVT-20250156,2025-09-22 05:04:57.675014,1,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_02,Sobrecarga Elétrica,Baixa,Operador
+EVT-20250157,2025-11-11 16:04:57.675014,2,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_02,Sobrecarga Elétrica,Baixa,SCADA
+EVT-20250158,2025-10-31 15:04:57.675014,1,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_02,Falha de Pressão,Média,SCADA
+EVT-20250159,2025-05-13 23:04:57.675014,1,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_01,Sobrecarga Elétrica,Média,SCADA
+EVT-20250160,2025-10-05 23:04:57.675014,2,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_01,Sobrecarga Elétrica,Baixa,Sensor
+EVT-20250161,2025-10-28 16:04:57.675014,2,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_02,Falha de Pressão,Média,Sensor
+EVT-20250162,2025-01-12 06:04:57.675014,1,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_02,Falha de Motor,Média,Operador
+EVT-20250163,2025-11-12 06:04:57.675014,2,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_02,Baixa Umidade,Média,SCADA
+EVT-20250164,2025-05-29 16:04:57.675014,1,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_01,Baixa Umidade,Alta,SCADA
+EVT-20250165,2025-06-09 03:04:57.675014,2,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_02,Falha de Pressão,Alta,Sensor
+EVT-20250166,2024-12-05 16:04:57.675014,2,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_02,Parada Programada,Alta,Operador
+EVT-20250167,2024-12-28 16:04:57.675014,1,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_02,Falha de Motor,Média,Sensor
+EVT-20250168,2025-05-21 20:04:57.675014,1,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_01,Baixa Umidade,Baixa,Sensor
+EVT-20250169,2025-08-01 07:04:57.675014,2,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_01,Parada Programada,Média,SCADA
+EVT-20250170,2025-08-30 10:04:57.675014,1,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_02,Falha de Motor,Baixa,Sensor
+EVT-20250171,2025-04-10 10:04:57.675014,1,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_02,Sobrecarga Elétrica,Alta,Operador
+EVT-20250172,2025-04-17 07:04:57.675014,2,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_02,Falha de Motor,Baixa,SCADA
+EVT-20250173,2025-07-01 22:04:57.675014,2,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_02,Falha de Motor,Alta,SCADA
+EVT-20250174,2025-07-23 01:04:57.675014,2,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_01,Falha de Pressão,Média,Sensor
+EVT-20250175,2024-12-09 10:04:57.675014,1,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_02,Falha de Pressão,Alta,Operador
+EVT-20250176,2025-11-14 22:04:57.675014,2,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_02,Parada Programada,Alta,SCADA
+EVT-20250177,2025-08-17 20:04:57.675014,1,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_02,Falha de Pressão,Média,SCADA
+EVT-20250178,2025-01-04 14:04:57.675014,1,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_02,Parada Programada,Alta,SCADA
+EVT-20250179,2024-12-26 01:04:57.675014,2,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_01,Sobrecarga Elétrica,Média,Sensor
+EVT-20250180,2024-12-11 20:04:57.675014,1,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_01,Falha de Motor,Baixa,Operador
+EVT-20250181,2025-09-13 17:04:57.675014,2,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_02,Parada Programada,Alta,SCADA
+EVT-20250182,2025-03-15 17:04:57.675014,1,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_01,Baixa Umidade,Média,Operador
+EVT-20250183,2025-08-20 21:04:57.675014,1,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_02,Parada Programada,Alta,Operador
+EVT-20250184,2025-10-27 03:04:57.675014,2,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_02,Falha de Motor,Média,Sensor
+EVT-20250185,2025-06-04 02:04:57.675014,2,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_02,Parada Programada,Baixa,Sensor
+EVT-20250186,2025-02-03 13:04:57.675014,2,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_01,Falha de Pressão,Alta,Sensor
+EVT-20250187,2025-10-07 17:04:57.675014,1,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_01,Parada Programada,Alta,Operador
+EVT-20250188,2025-01-25 22:04:57.675014,1,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_01,Falha de Motor,Baixa,SCADA
+EVT-20250189,2025-09-04 00:04:57.675014,1,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_01,Falha de Pressão,Alta,Operador
+EVT-20250190,2025-03-02 05:04:57.675014,1,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_01,Falha de Pressão,Baixa,SCADA
+EVT-20250191,2025-03-03 01:04:57.675014,2,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_02,Parada Programada,Média,SCADA
+EVT-20250192,2025-05-30 22:04:57.675014,1,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_02,Falha de Motor,Baixa,Sensor
+EVT-20250193,2025-04-25 00:04:57.675014,2,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_02,Falha de Pressão,Baixa,Sensor
+EVT-20250194,2025-02-19 13:04:57.675014,2,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_02,Baixa Umidade,Baixa,SCADA
+EVT-20250195,2025-10-12 00:04:57.675014,1,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_01,Falha de Pressão,Alta,Sensor
+EVT-20250196,2025-09-22 11:04:57.675014,2,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_01,Falha de Motor,Baixa,SCADA
+EVT-20250197,2024-12-16 02:04:57.675014,1,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_01,Parada Programada,Alta,Operador
+EVT-20250198,2025-04-25 19:04:57.675014,2,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_01,Falha de Pressão,Baixa,Sensor
+EVT-20250199,2025-09-19 23:04:57.675014,2,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_02,Falha de Motor,Média,Operador
+EVT-20250200,2025-05-13 05:04:57.675014,2,spBv1.0/EcoTijolos/DALARM/Prensagem/Prensa_01,Falha de Pressão,Alta,Sensor

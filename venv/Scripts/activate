@@ -38,7 +38,7 @@ deactivate () {
 # unset irrelevant variables
 deactivate nondestructive
 
-VIRTUAL_ENV="C:\Users\anaca\OneDrive\Área de Trabalho\projetosenai\venv"
+VIRTUAL_ENV="C:\Users\anaca\OneDrive\Área de Trabalho\projetosenai2\fabrica-projetosenai\venv"
 export VIRTUAL_ENV
 
 _OLD_VIRTUAL_PATH="$PATH"

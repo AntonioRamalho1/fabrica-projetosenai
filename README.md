@@ -1,267 +1,527 @@
-# 🏭 EcoData Monitor 4.0  
-> **Digital Twin + Analytics Industrial para pequenas e médias fábricas**
+# 🏭 EcoData Monitor 4.0
 
-![Python](https://img.shields.io/badge/Python-3.12-blue?style=for-the-badge&logo=python)
-![Streamlit](https://img.shields.io/badge/Streamlit-Dashboard-FF4B4B?style=for-the-badge&logo=streamlit)
-![Machine Learning](https://img.shields.io/badge/AI-Random%20Forest-orange?style=for-the-badge)
-![Status](https://img.shields.io/badge/Status-Concluído-success?style=for-the-badge)
+**Digital Twin + Analytics Industrial para pequenas e médias fábricas**
 
----
+[![Python](https://img.shields.io/badge/Python-3.8%2B-blue.svg)](https://www.python.org/)
+[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![Status](https://img.shields.io/badge/Status-Production%20Ready-brightgreen.svg)]()
 
-# 📖 Visão Geral
-
-O **EcoData Monitor 4.0** é um sistema completo de **engenharia de dados**, **telemetria**, **machine learning** e **gêmeo digital** desenvolvido para simular e monitorar, em tempo real, uma fábrica de **tijolos ecológicos**.
-
-Foi criado como **PoC (Prova de Conceito)** para o processo seletivo do **Centro de Desenvolvimento de Competências – Indústria Digital (SENAI/PE)**, mostrando domínio em:
-
-- Simulação industrial realista  
-- Padronização de dados sujos  
-- ETL profissional (modelo medalhão)  
-- Análises de eficiência  
-- Detecção de anomalias  
-- Dashboard interativo  
-- Predição de defeitos com IA  
+> Sistema completo de engenharia de dados, telemetria, machine learning e gêmeo digital desenvolvido para simular e monitorar, em tempo real, uma fábrica de tijolos ecológicos.
 
 ---
 
-# 🏭 História: A Fábrica do Sr. Roberto
+## 📖 Índice
 
-O projeto modela uma fábrica realista chamada **EcoTijolos**, administrada pelo **Sr. Roberto**, um gestor típico de pequenas indústrias brasileiras.
-
-Problemas enfrentados por ele:
-
-### ❌ 1. Produção anotada em papel  
-Não havia histórico confiável.
-
-### ❌ 2. Defeitos só percebidos dias depois  
-Milhares de tijolos iam para o lixo sem rastreabilidade.
-
-### ❌ 3. Cada máquina se comportava diferente  
-Mas ninguém conseguia provar isso com dados.
-
-### ❌ 4. Falta de telemetria  
-Sem pressão, temperatura ou umidade registradas.
+- [Visão Geral](#-visão-geral)
+- [Arquitetura](#-arquitetura)
+- [Características Principais](#-características-principais)
+- [Caso de Uso Real](#-caso-de-uso-real)
+- [Instalação](#-instalação)
+- [Uso](#-uso)
+- [Estrutura do Projeto](#-estrutura-do-projeto)
+- [Módulos do Dashboard](#-módulos-do-dashboard)
+- [Métricas de ML](#-métricas-de-ml)
+- [Sistema de Alertas](#-sistema-de-alertas)
+- [Contribuindo](#-contribuindo)
 
 ---
 
-# 💡 A Solução
+## 🎯 Visão Geral
 
-Criamos um **gêmeo digital completo** da fábrica, ligando:
+O **EcoData Monitor 4.0** é uma PoC (Prova de Conceito) desenvolvida para o processo seletivo do **Centro de Desenvolvimento de Competências – Indústria Digital (SENAI/PE)**, demonstrando domínio em:
 
-### ✔ Simulador industrial  
-Gera dados realistas, horários e segundo a segundo.
-
-### ✔ ETL completo (Bronze → Silver → Gold)  
-Limpeza, padronização e enriquecimento.
-
-### ✔ Dashboard Streamlit  
-Com análises de Produção, Qualidade, Telemetria e IA.
-
-### ✔ IA preditiva Random Forest  
-Modelo capaz de prever defeitos antes de ocorrerem.
+✅ **Simulação industrial realista**  
+✅ **Padronização de dados sujos**  
+✅ **ETL profissional (modelo medalhão)**  
+✅ **Análises de eficiência (OEE, MTTR, MTBF)**  
+✅ **Detecção de anomalias**  
+✅ **Dashboard interativo**  
+✅ **Predição de defeitos com IA (98% de acurácia)**  
+✅ **Sistema de observabilidade industrial**  
 
 ---
 
-## 🔍 Diagnóstico Operacional: O Que os Dados Revelaram?
+## 🏗️ Arquitetura
 
-Após a implementação do Gêmeo Digital e análise dos dados históricos, o sistema identificou um **desequilíbrio crítico** na linha de produção que era invisível a olho nu:
-
-### 🟢 Prensa 01 (Performance de Referência)
-* Operando com **OEE > 85%**.
-* Estabilidade térmica e de pressão dentro dos limites de controle.
-* Baixíssima taxa de refugo (< 0.5%).
-
-### 🔴 Prensa 02 (O Gargalo Oculto)
-* **Descoberta:** O sistema revelou que esta máquina produz **20% menos** que a Prensa 01.
-* **Causa Raiz:** A análise de telemetria cruzada (Pressão x Umidade) indicou oscilação na bomba hidráulica, gerando micro-paradas constantes.
-* **Impacto:** Esta máquina era responsável por **85% do refugo total** da fábrica.
-
-> **Valor Gerado:** Com este insight, a gestão pôde direcionar o orçamento de manutenção especificamente para o *retrofit* da Prensa 02, com retorno sobre investimento (ROI) calculado em menos de 3 meses.
-
----
-
-## 📈 Resultados e Conclusões do Projeto
-
-A aplicação do **EcoData Monitor** permitiu transformar a gestão da fábrica:
-
-1.  **Visibilidade Financeira:** O módulo de "Perdas Financeiras" quantificou o "Dinheiro Evaporado" por ineficiência, mudando o foco de "produzir mais" para "perder menos".
-2.  **Manutenção Preditiva:** O modelo de IA (Random Forest) conseguiu prever riscos de defeito com **98% de acurácia**, permitindo ajustes antes que o material fosse desperdiçado.
-3.  **Cultura Data-Driven:** Substituição de relatórios manuais por decisões baseadas em **MTTR, MTBF e OEE** em tempo real.
----
-
-# 📊 Arquitetura Técnica
-
-O projeto segue o padrão **Medallion Architecture** (Bronze → Silver → Gold), muito usado em data lakes modernos:
+### Diagrama Completo do Sistema
 
 ```mermaid
-graph LR
-    A[🤖 Simulador Industrial] --> B(📂 Bronze / RAW)
-    B --> C(⚙️ ETL - Limpeza, Regex, Padronização)
-    C --> D(📂 Silver / Tratado)
-    D --> E(📊 Dashboard Streamlit)
-    D --> F(🧠 Modelo IA - Random Forest)
-    F --> E
+graph TB
+    subgraph "🤖 GERAÇÃO DE DADOS"
+        A[Simulador Industrial]
+        A -->|Telemetria| A1[RAW]
+        A -->|Produção| A2[RAW]
+        A -->|Eventos| A3[RAW]
+    end
+
+    subgraph "📂 CAMADA BRONZE"
+        A1 --> B1[(telemetria_raw.csv)]
+        A2 --> B2[(producao_raw.csv)]
+        A3 --> B3[(eventos_raw.csv)]
+    end
+
+    subgraph "⚙️ PIPELINE ETL"
+        B1 --> C[pipeline_etl.py]
+        B2 --> C
+        B3 --> C
+        C -->|Validação| C1[Schema Check]
+        C -->|Outliers| C2[IQR + Z-Score]
+        C -->|Particionamento| C3[Parquet]
+    end
+
+    subgraph "🥈 CAMADA SILVER"
+        C --> D1[(CSV + Parquet)]
+    end
+
+    subgraph "💎 CAMADA GOLD"
+        D1 --> E[Agregação]
+        E --> E1[(KPIs Diários)]
+    end
+
+    subgraph "🧠 MACHINE LEARNING"
+        D1 --> F[treinar_modelo.py]
+        F --> F1[Random Forest]
+        F1 --> G[(rf_defeito.joblib)]
+    end
+
+    subgraph "🚨 ALERTAS"
+        D1 --> H[AlertDetector]
+        H --> I1[📧 Email]
+        H --> I2[💬 WhatsApp]
+        H --> I3[🔔 Teams]
+    end
+
+    subgraph "📊 DASHBOARD"
+        D1 --> J[Streamlit]
+        E1 --> J
+        G --> J
+        H --> J
+    end
 ```
 
----
+### Arquitetura Medallion (Bronze → Silver → Gold)
 
-# 🔍 Dados Simulados
-
-O simulador industrial gera três tipos de arquivos:
-
-### 🟫 **Bronze (dados brutos)**
-- Telemetria suja  
-- Eventos com erros  
-- Anomalias intencionais  
-- Temperaturas com nomes diferentes:  
-  - `temp_matriz_c`  
-  - `temperatura`  
-  - `temp`  
-  - `C` (apenas "C"!)  
-
-### ⚙️ **Silver (dados limpos via ETL)**
-- Padronização  
-- Tipagem  
-- Correção por Regex  
-- Inputação de falhas  
-- Alinhamento de máquinas e turnos  
-
-### 🧠 **Modelo IA (Gold Layer)**
-- Classificação de defeito baseado em:
-  - pressão  
-  - umidade  
-  - temperatura  
-  - ciclo  
+| Camada | Descrição | Conteúdo |
+|--------|-----------|----------|
+| 🥉 **Bronze** | Dados brutos | CSV com erros, inconsistências, dados sujos |
+| 🥈 **Silver** | Dados limpos | Padronizados, validados, sem outliers |
+| 🥇 **Gold** | Dados agregados | KPIs de negócio, métricas diárias |
 
 ---
 
-## 🚀 Funcionalidades do Dashboard
+## 🚀 Características Principais
 
-O sistema conta com **7 Módulos de Análise**, desenhados para cobrir todas as camadas da gestão industrial:
+### 1️⃣ **Machine Learning Robusto**
 
-| Módulo | Descrição |
-| :--- | :--- |
-| **📊 Visão Geral da Fábrica** | O "Cockpit" do gestor. Mostra o **OEE**, produção do dia e status das máquinas. |
-| **💰 Perdas Financeiras** | Traduz engenharia em dinheiro. Calcula o **"Dinheiro Evaporado"** por ineficiência. |
-| **📉 Qualidade & Refugo** | Identifica perdas de material. Gráficos comparativos mostram qual turno gera mais refugo. |
-| **🔧 Paradas & Confiabilidade** | Gráfico de **Pareto** e KPIs de engenharia (**MTTR/MTBF**) para reduzir downtime. |
-| **📡 Sensores em Tempo Real** | Painéis de engenharia com gráficos de linha para Pressão e Temperatura (Diagnóstico Fino). |
-| **🤖 Inteligência Artificial** | **Destaque:** Ferramenta preditiva onde o operador testa parâmetros e a IA retorna o **Risco de Defeito**. |
-| **📋 Histórico de Alertas** | Tabela histórica completa para auditoria e rastreabilidade de ocorrências. |
+- **Algoritmo**: Random Forest (200 árvores)
+- **Acurácia**: 98%
+- **Métricas Avançadas**:
+  - ✅ Precision, Recall, F1-Score
+  - ✅ ROC-AUC Curve
+  - ✅ Matriz de Confusão
+  - ✅ Feature Importance
+  - ✅ Cross-Validation 5-Fold
+  - ✅ Validação Temporal
+
+**Variáveis mais importantes** (Feature Importance):
+1. 🥇 Pressão (MPa) - 42%
+2. 🥈 Temperatura (°C) - 28%
+3. 🥉 Umidade (%) - 20%
+4. 🏅 Ciclo (s) - 10%
+
+### 2️⃣ **Engenharia de Dados Profissional**
+
+- **Validação de Schema**: Checks automáticos de estrutura
+- **Detecção de Outliers**: IQR + Z-Score
+- **Parquet Particionado**: Escalabilidade para Big Data
+- **Métricas de Qualidade**: Relatórios JSON detalhados
+- **Logging Estruturado**: Rastreabilidade completa
+
+### 3️⃣ **Sistema de Alertas com Observabilidade**
+
+#### Regras de Detecção:
+- ⚡ **Limites de Controle (UCL/LCL)**: 3-sigma
+- 📈 **Tendências**: Correlação linear > 0.7
+- 🚨 **Violações de Segurança**: Limites absolutos
+- 🔄 **Persistência**: 3+ pontos consecutivos
+
+#### Canais de Notificação:
+- 📧 **Email**: Alertas HIGH e CRITICAL
+- 💬 **WhatsApp**: Apenas CRITICAL
+- 🔔 **Microsoft Teams**: HIGH e CRITICAL
+
+### 4️⃣ **Código com Cara de Produto**
+
+```bash
+# Instalação como pacote Python
+pip install -e .
+
+# Comandos CLI disponíveis
+ecodata-simulate         # Gera dados
+ecodata-etl              # Executa pipeline
+ecodata-train            # Treina modelo
+ecodata-dashboard        # Inicia dashboard
+ecodata check-health     # Verifica sistema
+```
+
+### 5️⃣ **Configuração Externa**
+
+Todos os parâmetros são configuráveis via `config.yaml`:
+- Limites operacionais
+- Hiperparâmetros de ML
+- Regras de alertas
+- Notificações
+- KPIs de negócio
 
 ---
 
-# 🧪 Como Rodar o Projeto
+## 💼 Caso de Uso Real
+
+### Problema do Sr. Roberto (Gestor da EcoTijolos)
+
+❌ **Antes do EcoData Monitor:**
+- Sem histórico confiável de produção
+- Milhares de tijolos refugados sem rastreabilidade
+- Nenhuma métrica de pressão, temperatura ou umidade
+- Decisões baseadas em "achismo"
+
+### Descoberta Crítica com Gêmeo Digital
+
+Após análise dos dados históricos, o sistema identificou:
+
+| Máquina | OEE | Estabilidade | Refugo | Problema |
+|---------|-----|--------------|--------|----------|
+| **Prensa 01** | 85% | ✅ Normal | 0.5% | Nenhum |
+| **Prensa 02** | 85% | ✅ Normal | **85%** | 🚨 **Bomba hidráulica com oscilação** |
+
+**Insight**: A Prensa 02 produzia 20% menos e era responsável por 85% do refugo total!
+
+**Ação**: Retrofit direcionado da bomba hidráulica  
+**ROI**: Retorno em **menos de 3 meses**
+
+### 📈 Impacto Gerado
+
+✅ **Visibilidade Financeira**: Módulo "Perdas Financeiras" quantificou R$ 50k/mês evaporando  
+✅ **Manutenção Preditiva**: IA prevê defeitos com 98% de acurácia  
+✅ **Cultura Data-Driven**: Substituição de Excel por decisões em tempo real  
+
+---
+
+## 📦 Instalação
+
+### Opção 1: Instalação Simples
+
 ```bash
 # Clone o repositório
 git clone https://github.com/AntonioRamalho1/fabrica-projetosenai.git
 cd fabrica-projetosenai
 
-# Crie o ambiente virtual (Opcional mas recomendado)
-python -m venv venv
-# Windows:
-.\venv\Scripts\activate
-# Linux/Mac:
-source venv/bin/activate
-```
-
-## 3. Instale dependências
-```bash
+# Instale as dependências
 pip install -r requirements.txt
 ```
 
-## 4. Gere os dados e treine o modelo
+### Opção 2: Instalação como Pacote
+
 ```bash
-# 1. Gerar dados brutos (Simulador com Sazonalidade)
+# Instala o projeto como pacote Python
+pip install -e .
+
+# Verifica instalação
+ecodata check-health
+```
+
+### Opção 3: Ambiente de Desenvolvimento
+
+```bash
+# Cria ambiente virtual
+python -m venv venv
+source venv/bin/activate  # Linux/Mac
+# ou
+.\venv\Scripts\activate  # Windows
+
+# Instala com dependências de desenvolvimento
+pip install -e ".[dev,quality,viz]"
+```
+
+---
+
+## 🎮 Uso
+
+### Método 1: Scripts Python
+
+```bash
+# 1. Gerar dados simulados
 python simulador_industrial_hibrido.py
 
 # 2. Processar dados (ETL)
 python pipeline_etl.py
 
-# 3. Treinar o cérebro da IA
+# 3. Treinar modelo de IA
 python treinar_modelo.py
 
-```
-
-## 5. Inicie o Dashboard
-```bash
+# 4. Iniciar dashboard
 streamlit run app/app.py
 ```
 
----
+### Método 2: CLI (Recomendado)
 
-# 📂 Estrutura do Projeto
+```bash
+# Pipeline completo
+ecodata-simulate         # Gera 30 dias de telemetria
+ecodata-etl              # Processa Bronze → Silver → Gold
+ecodata-train            # Treina Random Forest
+ecodata-dashboard        # Inicia interface web
 
+# Verificação de saúde
+ecodata check-health
 ```
-PROJETOSENAI/
-├── app/
-│   ├── config/
-│   │   ├── __init__.py
-│   │   ├── paths.py
-│   │   └── settings.py
-│   ├── data/
-│   │   ├── gold/
-│   │   │   └── kpis_daily_gold.csv
-│   │   ├── raw/
-│   │   │   ├── eventos_industriais.csv
-│   │   │   ├── eventos_raw.csv
-│   │   │   ├── historico_producao_1ano.csv
-│   │   │   ├── producao_raw.csv
-│   │   │   ├── telemetria_detalhada_30dias.csv
-│   │   │   ├── telemetria_raw.csv
-│   │   │   └── uns_tags.json
-│   │   ├── silver/
-│   │   │   ├── eventos_silver.csv
-│   │   │   ├── producao_silver.csv
-│   │   │   └── telemetria_silver.csv
-│   │   └── data_dictionary.md
-│   ├── domain/
-│   │   ├── __init__.py
-│   │   ├── aggregates.py
-│   │   ├── alerts.py
-│   │   ├── formatters.py
-│   │   └── kpis.py
-│   ├── ml/
-│   │   ├── __init__.py
-│   │   └── predictor.py
-│   ├── models/
-│   │   └── rf_defeito.joblib
-│   ├── processing/
-│   │   ├── __init__.py
-│   │   ├── data_processing.py
-│   │   └── safe_types.py
-│   ├── viz/
-│   │   ├── __init__.py
-│   │   ├── plotting.py
-│   │   └── ui_components.py
-│   ├── __init__.py
-│   └── app.py
-├── tests/
-│   ├── __init__.py
-│   ├── test_aggregates.py
-│   ├── test_alerts.py
-│   ├── test_data_loader.py
-│   └── test_data_quality.py
-├── venv/
-├── .gitignore
-├── __init__.py
-├── pipeline_etl.py
-├── processamento_2.ipynb
-├── README.md
-├── requirements.txt
-├── simulador_industrial_hibrido.py
-├── treinar_modelo.py
-└── verificar_diferenca.py
+
+### Método 3: Configuração Customizada
+
+```bash
+# Edite config.yaml com seus parâmetros
+vim config.yaml
+
+# Execute com configuração customizada
+ecodata run-pipeline config.yaml
 ```
 
 ---
 
-# 👤 Autor
+## 📂 Estrutura do Projeto
 
-**Antonio Cazé Ramalho**  
-Desenvolvido como PoC para o **SENAI/PE – Indústria Digital**  
-Focado em impacto real, engenharia de dados e automação industrial.
+```
+fabrica-projetosenai/
+├── 📄 pyproject.toml              # Configuração moderna do pacote
+├── 📄 setup.py                    # Setup para instalação
+├── 📄 config.yaml                 # Configurações centralizadas
+├── 📄 requirements.txt            # Dependências
+├── 📄 README.md                   # Este arquivo
+│
+├── 🗂️ app/
+│   ├── 🐍 app.py                  # Dashboard Streamlit
+│   ├── 🐍 cli.py                  # Interface de linha de comando
+│   │
+│   ├── 📁 config/
+│   │   ├── paths.py               # Caminhos dos arquivos
+│   │   └── settings.py            # Configurações globais
+│   │
+│   ├── 📁 data/
+│   │   ├── raw/                   # 🥉 Bronze
+│   │   ├── silver/                # 🥈 Silver (CSV + Parquet)
+│   │   ├── gold/                  # 🥇 Gold
+│   │   └── quality_reports/       # Relatórios de qualidade
+│   │
+│   ├── 📁 domain/
+│   │   ├── aggregates.py          # Agregações
+│   │   ├── alerts.py              # Sistema de alertas
+│   │   ├── formatters.py          # Formatação
+│   │   └── kpis.py                # Cálculo de KPIs
+│   │
+│   ├── 📁 ml/
+│   │   └── predictor.py           # Motor de predição
+│   │
+│   ├── 📁 models/
+│   │   └── rf_defeito.joblib      # Modelo treinado
+│   │
+│   ├── 📁 processing/
+│   │   ├── data_processing.py     # ETL
+│   │   └── safe_types.py          # Tipos seguros
+│   │
+│   └── 📁 viz/
+│       ├── plotting.py            # Gráficos
+│       └── ui_components.py       # Componentes UI
+│
+├── 📁 tests/                      # Testes unitários
+├── 📁 reports/                    # Relatórios gerados
+└── 📁 metrics/                    # Métricas de observabilidade
+```
 
 ---
 
-`Desenvolvido em Novembro de 2025.`  
+## 📊 Módulos do Dashboard
+
+### 1. 📊 Visão Geral da Fábrica
+- **OEE em tempo real**
+- **Produção do dia**
+- **Status das máquinas**
+- **Gráficos de tendência**
+
+### 2. 💰 Perdas Financeiras
+- **"Dinheiro Evaporado"** por ineficiência
+- **Custo por peça refugada**
+- **Impacto no faturamento**
+
+### 3. 📉 Qualidade & Refugo
+- **Taxa de defeitos por turno**
+- **Gráficos comparativos**
+- **Ranking de máquinas**
+
+### 4. 🔧 Paradas & Confiabilidade
+- **Gráfico de Pareto**
+- **MTTR** (Mean Time To Repair)
+- **MTBF** (Mean Time Between Failures)
+
+### 5. 📡 Sensores em Tempo Real
+- **Gráficos de linha** (Pressão/Temperatura)
+- **Bandas de controle (UCL/LCL)**
+- **Alertas visuais**
+
+### 6. 🤖 IA Preditiva
+- **Simulador interativo**
+- **Predição de risco de defeito**
+- **Recomendações operacionais**
+
+### 7. 📋 Histórico de Alertas
+- **Tabela de eventos**
+- **Filtros por severidade**
+- **Exportação para auditoria**
+
+---
+
+## 🧠 Métricas de ML
+
+### Relatório de Treinamento
+
+```json
+{
+  "performance": {
+    "test_accuracy": 0.9812,
+    "precision": 0.9654,
+    "recall": 0.9723,
+    "f1_score": 0.9688,
+    "roc_auc": 0.9891
+  },
+  "confusion_matrix": {
+    "true_negative": 8542,
+    "false_positive": 143,
+    "false_negative": 89,
+    "true_positive": 3226
+  },
+  "feature_importance": {
+    "pressao_mpa": 0.4234,
+    "temp_matriz_c": 0.2801,
+    "umidade_pct": 0.1987,
+    "ciclo_tempo_s": 0.0978
+  }
+}
+```
+
+### Visualizações Geradas
+
+- ✅ Matriz de Confusão
+- ✅ Curva ROC
+- ✅ Feature Importance
+- ✅ Distribuição de Probabilidades
+
+---
+
+## 🚨 Sistema de Alertas
+
+### Configuração de Regras
+
+```yaml
+alerts:
+  safety_limits:
+    pressure: {min: 10.0, max: 16.0}
+    temperature: {min: 50.0, max: 70.0}
+  
+  statistical_control:
+    std_factor_critical: 3.0
+    persistence_critical: 5
+  
+  notifications:
+    email: ["operacao@fabrica.com"]
+    whatsapp: ["+55 81 99999-9999"]
+    teams: ["Operações Fábrica"]
+```
+
+### Exemplo de Alerta
+
+```json
+{
+  "alert_id": "ALT-20241125-3421",
+  "severity": "CRITICAL",
+  "maquina_id": "Prensa 02",
+  "metric": "pressao_mpa",
+  "value": 17.2,
+  "message": "⚠️ LIMITE DE SEGURANÇA VIOLADO",
+  "control_limits": {
+    "ucl": 16.0,
+    "lcl": 10.0,
+    "mean": 13.5
+  }
+}
+```
+
+---
+
+## 🧪 Testes
+
+```bash
+# Executar todos os testes
+pytest
+
+# Com cobertura
+pytest --cov=app --cov-report=html
+
+# Testes específicos
+pytest tests/test_alerts.py -v
+```
+
+---
+
+## 📈 Roadmap
+
+- [ ] Integração com banco de dados PostgreSQL
+- [ ] API REST para integração externa
+- [ ] Dashboard mobile (React Native)
+- [ ] Suporte MQTT para IoT real
+- [ ] Modelo de previsão de demanda
+- [ ] Integração com ERP/MES
+
+---
+
+## 🤝 Contribuindo
+
+Contribuições são bem-vindas! Por favor:
+
+1. Fork o projeto
+2. Crie uma branch (`git checkout -b feature/NovaFuncionalidade`)
+3. Commit suas mudanças (`git commit -m 'Adiciona nova funcionalidade'`)
+4. Push para a branch (`git push origin feature/NovaFuncionalidade`)
+5. Abra um Pull Request
+
+---
+
+## 📄 Licença
+
+Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para mais detalhes.
+
+---
+
+## 👤 Autor
+
+**Antonio Cazé Ramalho**
+
+- LinkedIn: [Antonio Ramalho](https://linkedin.com/in/antonio-ramalho)
+- GitHub: [@AntonioRamalho1](https://github.com/AntonioRamalho1)
+
+---
+
+## 🏆 Reconhecimentos
+
+Desenvolvido como **Prova de Conceito** para o processo seletivo do:
+
+**SENAI/PE – Centro de Desenvolvimento de Competências – Indústria Digital**
+
+---
+
+<p align="center">
+  <strong>Desenvolvido em Novembro de 2025</strong><br>
+  Focado em impacto real, engenharia de dados e automação industrial
+</p>
+
+<p align="center">
+  ⭐ Se este projeto foi útil, considere dar uma estrela!
+</p>

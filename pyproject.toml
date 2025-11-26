@@ -1,0 +1,99 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ecodata-monitor"
+version = "1.0.0"
+description = "Digital Twin + Analytics Industrial para pequenas e médias fábricas"
+readme = "README.md"
+requires-python = ">=3.8"
+license = {text = "MIT"}
+authors = [
+    {name = "Antonio Cazé Ramalho", email = "antonio.ramalho@example.com"}
+]
+keywords = ["industrial", "iot", "machine-learning", "data-engineering", "digital-twin"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Manufacturing",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+]
+
+dependencies = [
+    "pandas>=1.5.0",
+    "numpy>=1.23.0",
+    "scikit-learn>=1.2.0",
+    "streamlit>=1.25.0",
+    "joblib>=1.2.0",
+    "matplotlib>=3.6.0",
+    "seaborn>=0.12.0",
+    "pyarrow>=10.0.0",
+    "scipy>=1.10.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-cov>=3.0.0",
+    "black>=22.0.0",
+    "flake8>=4.0.0",
+    "mypy>=0.950",
+    "ipython>=8.0.0",
+    "jupyter>=1.0.0",
+]
+quality = [
+    "great-expectations>=0.15.0",
+    "pandera>=0.13.0",
+]
+viz = [
+    "plotly>=5.0.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/AntonioRamalho1/fabrica-projetosenai"
+Documentation = "https://github.com/AntonioRamalho1/fabrica-projetosenai/wiki"
+Repository = "https://github.com/AntonioRamalho1/fabrica-projetosenai"
+Issues = "https://github.com/AntonioRamalho1/fabrica-projetosenai/issues"
+
+[project.scripts]
+ecodata-simulate = "ecodata_monitor.cli:simulate"
+ecodata-etl = "ecodata_monitor.cli:run_etl"
+ecodata-train = "ecodata_monitor.cli:train_model"
+ecodata-dashboard = "ecodata_monitor.cli:run_dashboard"
+
+[tool.black]
+line-length = 100
+target-version = ['py38', 'py39', 'py310', 'py311']
+include = '\.pyi?$'
+
+[tool.pytest.ini_options]
+minversion = "7.0"
+addopts = "-ra -q --cov=ecodata_monitor --cov-report=term-missing"
+testpaths = ["tests"]
+python_files = "test_*.py"
+python_classes = "Test*"
+python_functions = "test_*"
+
+[tool.mypy]
+python_version = "3.8"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+ignore_missing_imports = true
+
+[tool.coverage.run]
+source = ["app"]
+omit = ["*/tests/*", "*/venv/*"]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+]

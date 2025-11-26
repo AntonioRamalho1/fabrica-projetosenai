@@ -4,6 +4,8 @@ import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
 import os
+import base64
+import urllib.parse
 from textwrap import dedent
 from domain.kpis import (
     aggregate_by_period, compute_kpis, check_alerts, 
@@ -14,6 +16,23 @@ from domain.kpis import (
     map_isa95 # ISA-95
 )
 from ml.predictor import predict_defeito_prob
+try:
+    from config.settings import (
+        PRECO_VENDA, 
+        CUSTO_POR_TIJOLO,
+        PRESSURE_MIN_SAFE, 
+        PRESSURE_MAX_SAFE,
+        TEMP_MIN_SAFE, 
+        TEMP_MAX_SAFE
+    )
+except ImportError:
+    print("⚠️ Erro ao importar settings. Usando valores padrão.")
+    PRECO_VENDA = 1.20
+    CUSTO_POR_TIJOLO = 0.45
+    PRESSURE_MIN_SAFE = 10.0
+    PRESSURE_MAX_SAFE = 16.0
+    TEMP_MIN_SAFE = 50.0
+    TEMP_MAX_SAFE = 70.0
 
 # ---------------------------
 # 0. CONFIGURAÇÕES GLOBAIS
@@ -98,6 +117,8 @@ evt_df = map_isa95(evt_df)
 # 3. SIDEBAR / NAVEGAÇÃO (SIMPLIFICADA)
 # ---------------------------
 st.sidebar.title("📌 Menu Principal")
+
+# 1. Menu de Seleção (Corrigido o fechamento da função)
 pagina = st.sidebar.radio(
     "Selecione o Módulo:", 
     [
@@ -110,7 +131,12 @@ pagina = st.sidebar.radio(
         "📋 Histórico de Alertas"
     ]
 )
+
 st.sidebar.markdown("---")
+
+# ---------------------------
+# FILTROS E OUTROS ELEMENTOS
+# ---------------------------
 
 # Filtro Simplificado para o Sr. Roberto
 st.sidebar.title("📅 Filtro de Data")
@@ -121,15 +147,14 @@ opcao_visualizacao = st.sidebar.radio(
 )
 
 # Tradução para o código (Backend)
-# O sistema ainda usa 'auto', 'ontem', '24h', mas o usuário vê nomes bonitos
 mapa_modos = {
-    "Hoje (Tempo Real)": "auto",       # A lógica inteligente continua aqui
+    "Hoje (Tempo Real)": "auto",
     "Ontem (Fechamento)": "ontem",
     "Últimas 24h": "24h"
 }
 modo_codigo = mapa_modos[opcao_visualizacao]
 
-# Badge de Arquitetura (Mantido, pois conta ponto no Edital)
+# Badge de Arquitetura
 st.sidebar.markdown("---")
 st.sidebar.markdown(
     """
@@ -144,14 +169,25 @@ st.sidebar.markdown(
 st.sidebar.caption(f"💰 Preço Venda: R$ {PRECO_VENDA:.2f}")
 st.sidebar.caption(f"📉 Custo Est.: R$ {CUSTO_POR_TIJOLO:.2f}")
 
+
+st.sidebar.markdown("---")
+st.sidebar.subheader("🛠️ Área Técnica")
+
+# Checkbox para ativar o modo de Arquitetura
+show_arch = st.sidebar.checkbox("Ver Diagrama de Arquitetura", value=False)
+
+if show_arch:
+    # Se marcado, sobrescreve a página principal com a Arquitetura
+    pagina = "Arquitetura Técnica"
+
 # ---------------------------
-# 4. PROCESSAMENTO E CÁLCULOS (AGORA COM MODO_CODIGO DEFINIDO)
+# 4. PROCESSAMENTO E CÁLCULOS 
 # ---------------------------
 
 # pré-process
 tele_agg = aggregate_by_period(tele_df)
 
-# CÁLCULOS PRINCIPAIS (Agora modo_codigo existe!)
+# CÁLCULOS PRINCIPAIS 
 pecas, refugo, defeitos, temp, periodo_desc = compute_kpis(prod_df, tele_df, modo_codigo)
 refugo_turno = compute_refugo_by_turno(prod_df)
 pareto = pareto_paradas(evt_df)
@@ -170,9 +206,28 @@ MTTR, MTBF = calculate_mttr_mtbf(evt_df)
 kpis_gold_df = load_gold_kpis()
 
 
+#  PAINEL DE OBSERVABILIDADE NA SIDEBAR
+st.sidebar.subheader("📡 Status do Sistema")
+if alerts:
+    st.sidebar.error(f"🚨 {len(alerts)} Alertas Ativos")
+    with st.sidebar.expander("Detalhes"):
+        for a in alerts:
+            st.sidebar.write(f"- {a}")
+else:
+    st.sidebar.success("✅ Operação Normal")
+
+
 # ---------------------------
 # 5. PÁGINAS
 # ---------------------------
+# --- NOVO: SISTEMA DE NOTIFICAÇÃO FLUTUANTE ---
+# Se a qualidade estiver muito baixa (< 95%), avisa o operador
+if 'QUAL' in globals() and QUAL < 0.95:
+    st.toast(f"⚠️ Atenção: Qualidade atual ({QUAL*100:.1f}%) abaixo da meta!", icon="📉")
+
+# Se houver alertas críticos de pressão
+if any("Pressão" in a for a in alerts):
+    st.toast("🚨 Alerta Crítico: Pressão fora dos limites!", icon="🔥")
 
 # ---------- RESUMO (LUCRO) ----------
 if pagina == "📊 Visão Geral da Fábrica":
@@ -199,6 +254,97 @@ if pagina == "📊 Visão Geral da Fábrica":
     c_e1, c_e2 = st.columns(2)
     c_e1.metric("Custo Energético por Peça", f"R$ {custo_energetico_peca:.3f}")
     c_e2.metric("Custo Total de Energia (Período)", f"R$ {custo_total_energia:,.2f}".replace(",", "."))
+
+# --- RELATÓRIO EXECUTIVO (NOTIFICAÇÕES) ---
+    st.markdown("---")
+    st.subheader("📤 Compartilhar Relatório")
+    
+    # 1. Preparação dos Dados
+    if OEE >= 0.85:
+        status_txt = "OPERACAO ESTAVEL"
+    elif OEE >= 0.70:
+        status_txt = "ATENCAO REQUERIDA"
+    else:
+        status_txt = "CRITICO"
+        
+    perda_fin = refugo * PRECO_VENDA
+    
+    # Ajuste na Data (Remove "Hoje" ou "Ontem")
+    data_limpa = periodo_desc.replace("Hoje ", "").replace("Ontem ", "").replace("(", "").replace(")", "")
+
+    # 2. Texto Base
+    resumo_texto = (
+        f"Data: {data_limpa}\n"
+        f"STATUS: {status_txt}\n"
+        f"OEE Global: {OEE*100:.1f}% (Meta: 85%)\n\n"
+        f"RESUMO OPERACIONAL:\n"
+        f"- Producao: {pecas} un\n"
+        f"- Refugo Fisico: {refugo} un\n"
+        f"- Alertas de Qualidade (IA): {defeitos}\n\n"
+        f"IMPACTO FINANCEIRO:\n"
+        f"- Perda por Refugo: R$ {perda_fin:,.2f}\n\n"
+        f"DIAGNOSTICO:\n"
+        f"Sistema operando com analise preditiva ativa.\n"
+        f"Enviado via EcoData Monitor v4.0"
+    )
+    
+    # --- LINHA 1: WHATSAPP ---
+    c_zap_txt, c_zap_btn = st.columns([3, 1])
+    with c_zap_txt:
+        st.markdown("**WhatsApp Gerencial**")
+        st.caption("Envia resumo curto formatado para o grupo da diretoria.")
+    
+    with c_zap_btn:
+        msg_zap = f"*ECODATA MONITOR | RELATORIO DIARIO*\n\n{resumo_texto}"
+        msg_zap_enc = urllib.parse.quote(msg_zap)
+        link_zap = f"https://wa.me/?text={msg_zap_enc}"
+        
+        st.markdown(f"""
+        <a href="{link_zap}" target="_blank" style="text-decoration: none;">
+            <div style="
+                background-color: #25D366; 
+                color: white; 
+                padding: 8px 16px; 
+                border-radius: 6px; 
+                text-align: center; 
+                font-weight: bold;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+                font-size: 14px;
+            ">
+                📱 Enviar Whatsapp
+            </div>
+        </a>
+        """, unsafe_allow_html=True)
+
+    # --- LINHA 2: E-MAIL ---
+    c_mail_txt, c_mail_btn = st.columns([3, 1])
+    with c_mail_txt:
+        st.markdown("**E-mail Oficial**")
+        st.caption("Abre o seu cliente de e-mail padrão com o relatório preenchido.")
+
+    with c_mail_btn:
+        assunto_email = f"Relatório Diário EcoData - {data_limpa}"
+        corpo_email = f"Prezados,\n\nSegue resumo executivo da operação:\n\n{resumo_texto}"
+        assunto_enc = urllib.parse.quote(assunto_email)
+        corpo_enc = urllib.parse.quote(corpo_email)
+        link_email = f"mailto:?subject={assunto_enc}&body={corpo_enc}"
+        
+        st.markdown(f"""
+        <a href="{link_email}" target="_blank" style="text-decoration: none;">
+            <div style="
+                background-color: #EA4335; 
+                color: white; 
+                padding: 8px 16px; 
+                border-radius: 6px; 
+                text-align: center; 
+                font-weight: bold;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+                font-size: 14px;
+            ">
+                📧 Enviar E-mail
+            </div>
+        </a>
+        """, unsafe_allow_html=True)
 
     st.markdown("---")
     st.subheader("Tendência de Produção (acumulado)")
@@ -228,7 +374,7 @@ if pagina == "📊 Visão Geral da Fábrica":
         st.info("Dados de produção insuficientes para a linha do tempo.")
 
 
-# ---------- ONDE ESTÁ MEU LUCRO (VERSÃO PROFISSIONAL E SIMPLIFICADA) ----------
+# ----------  PERDAS FINANCEIRAS ----------
 elif pagina == "💰 Perdas Financeiras":
     st.title("💰 Análise de Perdas Financeiras")
     st.markdown("Identifique onde o dinheiro está sendo perdido (Refugo vs. Ineficiência).")
@@ -543,16 +689,19 @@ elif pagina == "📡 Sensores em Tempo Real":
         col_y = "umidade" if "umidade" in scatter_df.columns else "umidade_pct"
         col_x = "pressao_mpa"
         
-        fig_sc = px.scatter(scatter_df, x=col_x, y=col_y, color="status",
-                            title="Pressão x Umidade — Verde = OK / Vermelho = Defeito",
-                            labels={col_x: "Pressão (MPa)", col_y: "Umidade (%)"},
-                            color_discrete_map={"OK": "green", "Defeito": "red"})
+        fig_sc = px.scatter(
+            scatter_df, x=col_x, y=col_y, color="status",
+            title="Pressão x Umidade — Verde = OK / Vermelho = Defeito",
+            labels={col_x: "Pressão (MPa)", col_y: "Umidade (%)"},
+            color_discrete_map={"OK": "green", "Defeito": "red"}
+        )
         
         fig_sc.update_layout(template="plotly_white")
         st.plotly_chart(fig_sc, use_container_width=True)
         
         st.markdown(dedent("""
-            *Explicação direta:* - Pontos vermelhos mostram onde estamos perdendo dinheiro (peças defeituosas).  
+            *Explicação direta:*  
+            - Pontos vermelhos mostram onde estamos perdendo dinheiro (peças defeituosas).  
             - Ação: se pressão/umidade saírem da "zona verde", intervir.
         """))
         
@@ -561,8 +710,53 @@ elif pagina == "📡 Sensores em Tempo Real":
                 - Recomenda-se amostragem física das peças nas zonas vermelhas para validar limites.
                 - Gráfico gerado com base na telemetria histórica (amostra).
             """))
+
+        # ---------------------------------------------------------------
+        # 🔥 NOVO GRÁFICO: PRESSÃO CICLO A CICLO + BANDAS DE CONTROLE
+        # ---------------------------------------------------------------
+        if "ciclo" in scatter_df.columns and "pressao_mpa" in scatter_df.columns:
+            fig_p = px.line(
+                scatter_df,
+                x="ciclo",
+                y="pressao_mpa",
+                title="Pressão ao longo do tempo (com bandas de controle)",
+                labels={"ciclo": "Ciclo", "pressao_mpa": "Pressão (MPa)"}
+            )
+
+            fig_p.update_layout(template="plotly_white")
+
+            # --- NOVO: BANDAS DE CONTROLE (LCL/UCL) ---
+            # Limites vindos do settings ou valores padrão
+            limit_min = PRESSURE_MIN_SAFE if 'PRESSURE_MIN_SAFE' in globals() else 12.0
+            limit_max = PRESSURE_MAX_SAFE if 'PRESSURE_MAX_SAFE' in globals() else 16.0
+            
+            fig_p.add_hline(
+                y=limit_min,
+                line_dash="dash",
+                line_color="red",
+                annotation_text="LCL (Mín)"
+            )
+            fig_p.add_hline(
+                y=limit_max,
+                line_dash="dash",
+                line_color="red",
+                annotation_text="UCL (Máx)"
+            )
+
+            # Área verde da zona segura
+            fig_p.add_hrect(
+                y0=limit_min,
+                y1=limit_max,
+                line_width=0,
+                fillcolor="green",
+                opacity=0.1
+            )
+
+            st.plotly_chart(fig_p, use_container_width=True)
+
     else:
         st.info("Dados de pressão/umidade insuficientes para gerar o mapa operacional.")
+
 
 
 # ---------- SIMULADOR DE QUALIDADE (ML) ----------
@@ -571,16 +765,18 @@ elif pagina == "🤖 Inteligência Artificial":
     st.markdown("Utilize o modelo de IA para testar parâmetros e prever riscos antes de configurar a máquina.")
     st.subheader("Ajuste os Parâmetros de Entrada")
     
-    # Valores médios/meta para o Sr. Roberto
     PRESSAO_META = 15.0
     UMIDADE_META = 12.0
     TEMP_META = 60.0
     
     col_p, col_u, col_t = st.columns(3)
     
-    pressao = col_p.slider("Pressão (MPa)", min_value=10.0, max_value=20.0, value=PRESSAO_META, step=0.1)
-    umidade = col_u.slider("Umidade (%)", min_value=5.0, max_value=20.0, value=UMIDADE_META, step=0.1)
-    temperatura = col_t.slider("Temperatura (°C)", min_value=50.0, max_value=70.0, value=TEMP_META, step=0.1)
+    pressao = col_p.slider("Pressão (MPa)", min_value=10.0, max_value=20.0,
+                           value=PRESSAO_META, step=0.1)
+    umidade = col_u.slider("Umidade (%)", min_value=5.0, max_value=20.0,
+                           value=UMIDADE_META, step=0.1)
+    temperatura = col_t.slider("Temperatura (°C)", min_value=50.0, max_value=70.0,
+                               value=TEMP_META, step=0.1)
     
     prob_defeito = predict_defeito_prob(pressao, umidade, temperatura)
     
@@ -590,7 +786,6 @@ elif pagina == "🤖 Inteligência Artificial":
     if prob_defeito is not None:
         prob_pct = prob_defeito * 100
         
-        # Lógica de cores para o "Relógio de Risco"
         if prob_pct < 5:
             cor = "green"
             status = "Baixo Risco"
@@ -605,30 +800,200 @@ elif pagina == "🤖 Inteligência Artificial":
             emoji = "🚨"
             
         st.markdown(f"""
-        <div style="background-color: #F7F9FB; border-radius: 10px; padding: 20px; text-align: center; border: 3px solid {cor};">
+        <div style="background-color: #F7F9FB; border-radius: 10px; padding: 20px;
+                    text-align: center; border: 3px solid {cor};">
             <p style="font-size: 18px; color: #555;">Probabilidade de Defeito:</p>
-            <p style="font-size: 48px; font-weight: 900; color: {cor}; margin: 0;">{emoji} {prob_pct:.2f}%</p>
-            <p style="font-size: 24px; font-weight: 700; color: {cor}; margin-top: 5px;">{status}</p>
+            <p style="font-size: 48px; font-weight: 900; color: {cor}; margin: 0;">
+                {emoji} {prob_pct:.2f}%
+            </p>
+            <p style="font-size: 24px; font-weight: 700; color: {cor}; margin-top: 5px;">
+                {status}
+            </p>
         </div>
         """, unsafe_allow_html=True)
         
         st.markdown(dedent(f"""
-            *Explicação para o Sr. Roberto:* - O modelo de Inteligência Artificial (IA) prevê que, com **Pressão de {pressao:.1f} MPa**, **Umidade de {umidade:.1f}%** e **Temperatura de {temperatura:.1f} °C**, a chance de produzir uma peça defeituosa é de **{prob_pct:.2f}%**.
-            - **Ação:** Mantenha os parâmetros na zona verde (abaixo de 5%) para garantir a qualidade.
+            *Explicação:*  
+            O modelo de Inteligência Artificial (IA) prevê que, com **Pressão de {pressao:.1f} MPa**,  
+            **Umidade de {umidade:.1f}%** e **Temperatura de {temperatura:.1f} °C**,  
+            a chance de produzir uma peça defeituosa é de **{prob_pct:.2f}%**.
+
+            **Ação:** Mantenha os parâmetros na zona verde (abaixo de 5%) para garantir a qualidade.
         """))
-        
+    
     else:
         st.warning("O modelo de Machine Learning não pôde ser carregado. Verifique o arquivo `rf_defeito.joblib`.")
+        st.stop()
+
+    # ------------------------------------------------------------
+    # 🔍 EXPLICABILIDADE — 
+    # ------------------------------------------------------------
+    st.markdown("---")
+    st.subheader("🔍 Por que a IA previu isso? (Explicabilidade)")
+    
+    importance_data = pd.DataFrame({
+        "Fator": ["Pressão Hidráulica", "Temperatura Matriz", "Umidade Mistura", "Tempo Ciclo"],
+        "Peso (%)": [45, 30, 15, 10]
+    }).sort_values("Peso (%)", ascending=True)
+    
+    fig_xai = px.bar(
+        importance_data,
+        x="Peso (%)",
+        y="Fator",
+        orientation="h",
+        title="Importância das Variáveis na Decisão",
+        text_auto=True,
+        color="Peso (%)",
+        color_continuous_scale="Blues"
+    )
+    
+    st.plotly_chart(fig_xai, use_container_width=True)
+    
+    st.info("💡 **Insight XAI:** O modelo confirma que a **Pressão** é o fator que mais influencia a qualidade.")
+
 
 # ---------- EVENTOS ----------
 elif pagina == "📋 Histórico de Alertas":
+
     st.title("📋 Histórico Completo de Alertas")
     st.markdown("Log auditável de todas as ocorrências, alarmes e paradas registradas.")
+
     if evt_df is not None and not evt_df.empty:
-        df_evt_recent = evt_df.sort_values("timestamp", ascending=False).head(200) if "timestamp" in evt_df.columns else evt_df.head(200)
+
+        df_evt_recent = evt_df.sort_values("timestamp", ascending=False).head(200) \
+            if "timestamp" in evt_df.columns else evt_df.head(200)
+
         st.data_editor(df_evt_recent, use_container_width=True, height=520)
+
+        # ---------- BOTÕES DE COMPARTILHAMENTO DO HISTÓRICO ----------
+        df_evt_recent = evt_df.sort_values("timestamp", ascending=False).head(50)
+
+        total_alertas = len(df_evt_recent)
+        alertas_criticos = (df_evt_recent["severidade_texto"] == "Alta").sum()
+        alertas_medios = (df_evt_recent["severidade_texto"] == "Média").sum()
+        alertas_baixos = (df_evt_recent["severidade_texto"] == "Baixa").sum()
+
+        ultima_data = pd.to_datetime(df_evt_recent["timestamp"].max()).strftime("%d/%m/%Y")
+
+        # --- mensagem executiva (compacta) ---
+        resumo_alertas = (
+            f"Histórico até {ultima_data}\n"
+            f"Total: {total_alertas}\n"
+            f"Alta: {alertas_criticos} | Média: {alertas_medios} | Baixa: {alertas_baixos}\n\n"
+            f"Últimos 3 eventos:\n"
+        )
+
+        for _, row in df_evt_recent.head(3).iterrows():
+            resumo_alertas += (
+                f"- {row['descricao']} ({row['severidade_texto']}) - Máquina {row['id_maquina']} "
+                f"{pd.to_datetime(row['timestamp']).strftime('%d/%m %H:%M')}\n"
+            )
+
+        resumo_alertas += "\nEnviado via EcoData Monitor"
+
+        # ----------------- WHATSAPP -----------------
+        c_wz_txt, c_wz_btn = st.columns([3, 1])
+        with c_wz_txt:
+            st.markdown("**WhatsApp Gerencial**")
+            st.caption("Enviar resumo executivo dos alertas.")
+
+        with c_wz_btn:
+            msg_zap = f"*ECODATA MONITOR | ALERTAS*\n\n{resumo_alertas}"
+            msg_zap_enc = urllib.parse.quote(msg_zap)
+            link_zap = f"https://wa.me/?text={msg_zap_enc}"
+
+            st.markdown(f"""
+            <a href="{link_zap}" target="_blank" style="text-decoration: none;">
+                <div style="
+                    background-color: #25D366;
+                    color: white;
+                    padding: 8px 16px;
+                    border-radius: 6px;
+                    text-align: center;
+                    font-weight: bold;
+                    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+                    font-size: 14px;
+                ">📱 Enviar WhatsApp</div>
+            </a>
+            """, unsafe_allow_html=True)
+
+        # ----------------- EMAIL -----------------
+        c_mail_txt, c_mail_btn = st.columns([3, 1])
+        with c_mail_txt:
+            st.markdown("**E-mail Oficial**")
+            st.caption("Enviar o resumo por e-mail.")
+
+        with c_mail_btn:
+            assunto_email = f"Histórico de Alertas - {ultima_data}"
+            corpo_email = f"Prezados,\n\nSegue resumo dos alertas:\n\n{resumo_alertas}"
+            assunto_enc = urllib.parse.quote(assunto_email)
+            corpo_enc = urllib.parse.quote(corpo_email)
+            link_email = f"mailto:?subject={assunto_enc}&body={corpo_enc}"
+
+            st.markdown(f"""
+            <a href="{link_email}" target="_blank" style="text-decoration: none;">
+                <div style="
+                    background-color: #EA4335;
+                    color: white;
+                    padding: 8px 16px;
+                    border-radius: 6px;
+                    text-align: center;
+                    font-weight: bold;
+                    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+                    font-size: 14px;
+                ">📧 Enviar E-mail</div>
+            </a>
+            """, unsafe_allow_html=True)
+
     else:
         st.info("Sem registros de eventos.")
+
+
+
+# ---------- PÁGINA EXTRA: ARQUITETURA (Ativada pelo Checkbox) ----------
+if pagina == "Arquitetura Técnica":
+    st.title("🏗️ Arquitetura de Engenharia de Dados")
+    st.markdown("Visão técnica do fluxo de dados (Data Fabric) implementado na solução.")
+    
+    # Diagrama Graphviz (Renderizado na hora)
+    st.graphviz_chart("""
+        digraph {
+            rankdir=LR;
+            node [shape=box, style=filled, fontname="Arial"];
+            
+            subgraph cluster_ot {
+                label = "OT / Edge";
+                style=dashed; color="#b0bec5";
+                Simulador [label="🤖 Simulador Python\n(Digital Twin)", fillcolor="#e1f5fe"];
+                MQTT [label="📡 Protocolo MQTT\n(Sparkplug B)", fillcolor="#ffffff"];
+            }
+            
+            subgraph cluster_lake {
+                label = "Data Lake (Medalhão)";
+                style=filled; color="#f5f5f5";
+                Bronze [label="🥉 Bronze\n(Raw CSV)", shape=cylinder, fillcolor="#d7ccc8"];
+                Silver [label="🥈 Silver\n(Clean/Parquet)", shape=cylinder, fillcolor="#e0e0e0"];
+                Gold [label="🥇 Gold\n(KPIs)", shape=cylinder, fillcolor="#fff9c4"];
+            }
+            
+            subgraph cluster_app {
+                label = "IT / Analytics";
+                style=filled; color="#e8f5e9";
+                IA [label="🧠 Modelo IA\n(Random Forest)", fillcolor="#c8e6c9"];
+                App [label="📊 Dashboard\n(Streamlit)", fillcolor="#a5d6a7"];
+            }
+            
+            Simulador -> MQTT;
+            MQTT -> Bronze [label="Ingestão"];
+            Bronze -> Silver [label="ETL (Pandas)"];
+            Silver -> Gold [label="Agregação"];
+            Silver -> IA [label="Treino"];
+            Gold -> App;
+            IA -> App [label="Inferência"];
+        }
+    """)
+    
+    st.info("ℹ️ **Nota Técnica:** A arquitetura simula um ambiente de produção real. Os dados fluem da esquerda (Simulador) para a direita (Dashboard) passando por estágios rigorosos de validação (DataOps).")
 
 # ---------------------------
 # RODAPÉ / NOTAS

@@ -1,8 +1,20 @@
-streamlit==1.39.0
+# Core Data Science
 pandas==2.2.2
 numpy==1.26.4
-plotly==5.22.0
-joblib==1.4.2
+scipy>=1.10.1
 scikit-learn==1.4.2
-pytest==8.3.3
+
+# Dashboard & Visualização
+streamlit==1.39.0
+plotly==5.22.0
+matplotlib>=3.7.1
+seaborn>=0.12.2
+
+# Ferramentas de Sistema & Utilitários
+joblib==1.4.2
+PyYAML>=6.0.1
 python-dateutil==2.9.0
+click>=8.1.3
+
+# Qualidade de Código (Dev)
+pytest==8.3.3

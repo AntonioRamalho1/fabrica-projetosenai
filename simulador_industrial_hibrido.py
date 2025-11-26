@@ -4,48 +4,61 @@ from datetime import datetime, timedelta
 import json
 import random
 import os
+import sys
 
-# =============================================
-# CONFIGURAÇÕES DE PASTA
-# =============================================
-# Caminho exato para não quebrar seu projeto
-# =============================================
-# CONFIGURAÇÕES DE PASTA (AUTOMÁTICA)
-# =============================================
-import os
+# --- 1. CONFIGURAÇÃO DE IMPORTAÇÃO (Conecta ao settings.py) ---
+# Adiciona a pasta atual ao path para conseguir importar app.config
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-# Pega o diretório onde este script está rodando
+try:
+    from app.config.settings import SIMULATOR_CONFIG
+    print("✅ Configurações carregadas do config.yaml via settings.py")
+except ImportError:
+    print("⚠️ Erro ao importar settings.py. Usando padrões de fallback.")
+    SIMULATOR_CONFIG = {}
+
+# --- 2. DEFINIÇÃO DE PARÂMETROS (Lê do Config ou usa Padrão) ---
+# Tenta ler do YAML, se não conseguir, usa o valor padrão (segundo argumento)
+PARAMS = SIMULATOR_CONFIG.get('operating_parameters', {})
+
+META_PRESSAO = PARAMS.get('pressure', {}).get('mean', 15.0)
+STD_PRESSAO = PARAMS.get('pressure', {}).get('std', 1.2)
+
+META_UMIDADE = PARAMS.get('humidity', {}).get('mean', 12.0)
+STD_UMIDADE = PARAMS.get('humidity', {}).get('std', 1.5)
+
+META_TEMP = PARAMS.get('temperature', {}).get('mean', 60.0)
+STD_TEMP = PARAMS.get('temperature', {}).get('std', 5.0)
+
+CICLO_MEDIO_S = PARAMS.get('cycle_time', {}).get('mean', 7.0)
+PECAS_POR_CICLO = 2
+NUM_MAQUINAS = 2
+
+# Configuração de Pastas
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-
-# Monta o caminho relativo: ./app/data/raw
 OUTPUT_DIR = os.path.join(BASE_DIR, "app", "data", "raw")
-
-# Cria a pasta se não existir
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
-print(f"📂 Diretório de saída configurado: {OUTPUT_DIR}")
+print(f"📂 Diretório de saída: {OUTPUT_DIR}")
 
-# =============================================
-# CONFIGURAÇÕES DA FÁBRICA
-# =============================================
-NUM_MAQUINAS = 2
-CICLO_MEDIO_S = 7.0
-PECAS_POR_CICLO = 2
-META_PRESSAO = 15.0
-META_UMIDADE = 12.0
-META_TEMP = 60.0
-
+# Datas
 DATA_FIM = datetime.now()
-DATA_INICIO_ANO = DATA_FIM - timedelta(days=365)
-DATA_INICIO_TELEMETRIA = DATA_FIM - timedelta(days=30)
+days_tele = SIMULATOR_CONFIG.get('telemetry_days', 30)
+years_hist = SIMULATOR_CONFIG.get('production_history_years', 1)
+
+DATA_INICIO_ANO = DATA_FIM - timedelta(days=365 * years_hist)
+DATA_INICIO_TELEMETRIA = DATA_FIM - timedelta(days=days_tele)
 
 def turno(h):
     if 6 <= h < 14: return "Manhã"
     if 14 <= h < 22: return "Tarde"
     return "Noite"
 
+def gerar_topico(maquina_id, tipo_msg="DDATA"):
+    return f"spBv1.0/EcoTijolos/{tipo_msg}/Prensagem/Prensa_{maquina_id:02d}"
+
 print("\nIniciando simulação industrial AVANÇADA...")
-print("Características: Sazonalidade, Standby de Energia, IDs de Eventos e Diferença de Máquinas.\n")
+print(f"⚙️ Parâmetros Base: Pressão={META_PRESSAO} MPa | Temp={META_TEMP} °C")
 
 # =============================================
 # 1) HISTÓRICO (1 ANO) - COM SAZONALIDADE E STANDBY
@@ -62,10 +75,10 @@ while t <= DATA_FIM:
         hr = t.hour
         mes = t.month
 
-        # --- MELHORIA 1: SAZONALIDADE (Nordeste) ---
-        if mes in [9, 10, 11, 12, 1]:  # Alta temporada (Verão/Seca)
+        # --- SAZONALIDADE (Nordeste) ---
+        if mes in [9, 10, 11, 12, 1]:  # Alta temporada
             fator_sazonal = 1.15
-        elif mes in [5, 6, 7]:         # Baixa temporada (Chuvas/São João)
+        elif mes in [5, 6, 7]:         # Baixa temporada
             fator_sazonal = 0.85
         else:
             fator_sazonal = 1.0
@@ -75,19 +88,18 @@ while t <= DATA_FIM:
             # Máquina 1: Nova e Eficiente
             fator_performance = random.uniform(0.95, 1.05)
             probabilidade_quebra = 0.01 
-            energia_base = 2.0 # kWh em standby (mais eficiente)
+            energia_base = 2.0 
         else:
             # Máquina 2: Velha e Problemática
             fator_performance = random.uniform(0.75, 0.90)
             probabilidade_quebra = 0.04
-            energia_base = 3.5 # kWh em standby (menos eficiente)
+            energia_base = 3.5 
 
         # Máquina parada domingo ou falha
         operando = True
         if dia_sem == 6 or (random.random() < probabilidade_quebra):
             operando = False
 
-        # --- MELHORIA 4: ENERGIA BASE (STANDBY) ---
         if operando:
             fator_turno = 1.0 if 6 <= hr < 22 else 0.9
             capacidade_teorica = (3600 / CICLO_MEDIO_S) * PECAS_POR_CICLO
@@ -105,13 +117,13 @@ while t <= DATA_FIM:
         else:
             producao = 0
             refugos = 0
-            # Máquina parada ainda gasta um pouco (painel ligado, CLP)
             energia = energia_base * random.uniform(0.8, 1.0)
             status = "Parada/Manutencao"
 
         historico.append({
             "timestamp": t,
             "maquina_id": m,
+            "topico_uns": gerar_topico(m, "DDATA"),
             "turno": turno(hr),
             "pecas_produzidas": producao,
             "pecas_refugadas": refugos,
@@ -124,11 +136,12 @@ while t <= DATA_FIM:
 df_hist = pd.DataFrame(historico)
 path_hist = os.path.join(OUTPUT_DIR, "historico_producao_1ano.csv")
 df_hist.to_csv(path_hist, index=False)
-print(f"✔ histórico_producao_1ano.csv gerado (Sazonalidade aplicada!)")
+print(f"✔ histórico_producao_1ano.csv gerado")
 
 # =============================================
 # ANOMALIAS DE TEMPERATURA
 # =============================================
+# Mantivemos sua lista complexa de erros!
 anomalias_temp = ["temp", "temperatura", "C", None, "ERR", "nan", "55C", "60.1 °C", "44,3"]
 
 def aplicar_anomalia_temp(valor):
@@ -137,65 +150,49 @@ def aplicar_anomalia_temp(valor):
     return valor
 
 # =============================================
-# 2) TELEMETRIA DETALHADA (30 dias) - CENÁRIO REALISTA (INSTABILIDADE)
+# 2) TELEMETRIA DETALHADA (30 dias)
 # =============================================
-print("⚡ Gerando telemetria com instabilidade realista...")
+print("⚡ Gerando telemetria detalhada...")
 
 telemetria = []
 t = DATA_INICIO_TELEMETRIA
 
-# Não existe mais "data de início da falha". O problema é aleatório/crônico.
-
 while t <= DATA_FIM:
     for m in range(1, NUM_MAQUINAS + 1):
-        # A fábrica para de madrugada (02h as 05h)
-        if not (2 <= t.hour < 5): 
+        if not (2 <= t.hour < 5): # Pausa na madrugada
 
-            # --- PERSONALIDADE DA MÁQUINA NA TELEMETRIA ---
-            if m == 1:
-                # Máquina 1 (Boa): Pressão estável, varia pouco
-                # Média 15 MPa, Desvio 0.5 (Bem precisa)
-                pressao = np.random.normal(META_PRESSAO, 0.5)
-                
-                # Temperatura controlada (Média 60, varia 1.5)
-                temp_real = np.random.normal(META_TEMP, 1.5)
-                
-                # Umidade consistente
-                umidade = np.random.normal(META_UMIDADE, 0.5)
-                
+            # Máquina 2 oscila mais (Lógica complexa mantida)
+            desvio_extra = 2.5 if m == 2 else 0.5
+            pressao = np.random.normal(META_PRESSAO, desvio_extra)
+            
+            if m == 2 and random.random() < 0.1:
+                 temp_real = np.random.normal(META_TEMP + 15, 3.0) # Superaquecimento
             else:
-                # Máquina 2 (Instável): A pressão "samba" muito
-                # Média um pouco menor (14.5) e Desvio ENORME (2.5)
-                # Isso faz ela cair abaixo de 12 (defeito) várias vezes ao dia, aleatoriamente
-                pressao = np.random.normal(14.5, 2.5)
-                
-                # Superaquecimento aleatório (picos de calor)
-                if random.random() < 0.1: # 10% do tempo ela esquenta
-                    temp_real = np.random.normal(75.0, 3.0)
-                else:
-                    temp_real = np.random.normal(62.0, 2.0)
-                
-                # Umidade varia mais
-                umidade = np.random.normal(META_UMIDADE, 1.5)
+                 temp_real = np.random.normal(META_TEMP, STD_TEMP)
 
-            # Aplica sujeira na temperatura (sensor falhando as vezes)
+            umidade = np.random.normal(META_UMIDADE, STD_UMIDADE)
+            
+            # Aplica sujeira na temperatura
             temperatura_final = aplicar_anomalia_temp(round(temp_real, 1))
 
-            # --- REGRA FÍSICA DE DEFEITO ---
+            # Regra de Ouro da Qualidade
             flag = 0
-            
-            # Se a pressão cair muito (<12) OU esquentar demais (>70) = DEFEITO
-            # Como a Máq 2 tem desvio alto (2.5), ela vai cair < 12 com frequência
-            if pressao < 12.0 or umidade > 14.5 or temp_real > 70.0:
+            # Converte para float seguro para validar a regra lógica
+            try:
+                temp_valida = float(temperatura_final)
+            except:
+                temp_valida = 999 # Se for erro de texto, considera falha
+                
+            if pressao < 12.0 or umidade > 14.5 or temp_valida > 68.0:
                 flag = 1
             
-            # Se o sensor de temperatura falhou (sujeira), também marca alerta
             if temperatura_final in anomalias_temp:
                 flag = 1 
 
             telemetria.append({
                 "timestamp": t,
                 "maquina_id": m,
+                "topico_uns": gerar_topico(m, "DDATA"),
                 "ciclo_tempo_s": round(np.random.normal(CICLO_MEDIO_S, 0.25), 2),
                 "pressao_mpa": round(pressao, 2),
                 "umidade_pct": round(umidade, 2),
@@ -204,12 +201,12 @@ while t <= DATA_FIM:
                 "flag_defeito": flag
             })
 
-    t += timedelta(seconds=CICLO_MEDIO_S)
+    t += timedelta(minutes=5) # Amostragem a cada 5 min (ajuste para performance)
 
 df_tel = pd.DataFrame(telemetria)
 path_tel = os.path.join(OUTPUT_DIR, "telemetria_detalhada_30dias.csv")
 df_tel.to_csv(path_tel, index=False)
-print(f"✔ telemetria_detalhada_30dias.csv gerado (Cenário Instável)")
+print(f"✔ telemetria_detalhada_30dias.csv gerado")
 
 # =============================================
 # 3) EVENTOS INDUSTRIAIS - COM IDs ÚNICOS
@@ -220,13 +217,13 @@ eventos = []
 tipos = ["Falha de Pressão", "Sobrecarga Elétrica", "Baixa Umidade", "Falha de Motor", "Parada Programada"]
 
 for i in range(200):
-    # --- MELHORIA 3: ID ÚNICO DE EVENTO ---
     evento_id = f"EVT-{2025}{i+1:04d}"
     
     eventos.append({
         "evento_id": evento_id,
         "timestamp": DATA_INICIO_ANO + timedelta(hours=random.randint(0, 365*24)),
         "maquina_id": random.randint(1, NUM_MAQUINAS),
+        "topico_uns": gerar_topico(random.randint(1, NUM_MAQUINAS), "DALARM"),
         "evento": random.choice(tipos),
         "severidade": random.choice(["Baixa", "Média", "Alta"]),
         "origem": random.choice(["Sensor", "Operador", "SCADA"])
@@ -235,21 +232,19 @@ for i in range(200):
 df_evt = pd.DataFrame(eventos)
 path_evt = os.path.join(OUTPUT_DIR, "eventos_industriais.csv")
 df_evt.to_csv(path_evt, index=False)
-print(f"✔ eventos_industriais.csv gerado (IDs adicionados)")
+print(f"✔ eventos_industriais.csv gerado")
 
 # =============================================
 # 4) UNS SIMBÓLICO
 # =============================================
 uns = {
-    "empresa": "Fabrica_Tijolos_Eco",
-    "planta": "PE_Recife",
+    "empresa": PARAMS.get('factory_name', "EcoTijolos"),
     "estrutura": "ISA-95",
     "last_update": str(datetime.now())
 }
-
 path_uns = os.path.join(OUTPUT_DIR, "uns_tags.json")
 with open(path_uns, "w") as f:
     json.dump(uns, f, indent=4)
 
 print(f"✔ Salvo em: {path_uns}")
-print("\n🎉 Simulação COMPLETA! Dados salvos com sucesso.")
+print("\n🎉 Simulação COMPLETA! Integrada com config.yaml.")

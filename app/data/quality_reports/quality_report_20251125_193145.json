@@ -1,0 +1,276 @@
+{
+  "pipeline_execution": {
+    "timestamp": "2025-11-25T19:31:45.484262",
+    "status": "SUCCESS"
+  },
+  "datasets": [
+    {
+      "dataset": "telemetria_silver",
+      "timestamp": "2025-11-25T19:31:40.069172",
+      "total_records": 603480,
+      "columns": [
+        "timestamp",
+        "maquina_id",
+        "ciclo_tempo_s",
+        "pressao_mpa",
+        "umidade_pct",
+        "temp_matriz_c",
+        "pecas_produzidas",
+        "flag_defeito",
+        "data"
+      ],
+      "completeness": {
+        "timestamp": {
+          "null_count": 0,
+          "null_percentage": 0.0,
+          "completeness": 1.0
+        },
+        "maquina_id": {
+          "null_count": 0,
+          "null_percentage": 0.0,
+          "completeness": 1.0
+        },
+        "ciclo_tempo_s": {
+          "null_count": 0,
+          "null_percentage": 0.0,
+          "completeness": 1.0
+        },
+        "pressao_mpa": {
+          "null_count": 0,
+          "null_percentage": 0.0,
+          "completeness": 1.0
+        },
+        "umidade_pct": {
+          "null_count": 0,
+          "null_percentage": 0.0,
+          "completeness": 1.0
+        },
+        "temp_matriz_c": {
+          "null_count": 0,
+          "null_percentage": 0.0,
+          "completeness": 1.0
+        },
+        "pecas_produzidas": {
+          "null_count": 0,
+          "null_percentage": 0.0,
+          "completeness": 1.0
+        },
+        "flag_defeito": {
+          "null_count": 0,
+          "null_percentage": 0.0,
+          "completeness": 1.0
+        },
+        "data": {
+          "null_count": 0,
+          "null_percentage": 0.0,
+          "completeness": 1.0
+        }
+      },
+      "duplicates": {
+        "count": 0,
+        "percentage": 0.0
+      },
+      "outliers": {
+        "maquina_id": {
+          "iqr_method": 0,
+          "zscore_method": 0
+        },
+        "ciclo_tempo_s": {
+          "iqr_method": 3736,
+          "zscore_method": 1751
+        },
+        "pressao_mpa": {
+          "iqr_method": 70020,
+          "zscore_method": 9736
+        },
+        "umidade_pct": {
+          "iqr_method": 45643,
+          "zscore_method": 0
+        },
+        "temp_matriz_c": {
+          "iqr_method": 29768,
+          "zscore_method": 22835
+        },
+        "pecas_produzidas": {
+          "iqr_method": 0,
+          "zscore_method": 0
+        },
+        "flag_defeito": {
+          "iqr_method": 83900,
+          "zscore_method": 0
+        }
+      },
+      "processing": {
+        "initial_records": 648000,
+        "final_records": 603480,
+        "removed_invalid": "44520",
+        "removal_rate": 6.870370370370369
+      }
+    },
+    {
+      "dataset": "producao_silver",
+      "timestamp": "2025-11-25T19:31:40.659457",
+      "total_records": 17522,
+      "columns": [
+        "timestamp",
+        "maquina_id",
+        "turno",
+        "pecas_produzidas",
+        "pecas_refugadas",
+        "consumo_kwh",
+        "status",
+        "data",
+        "taxa_refugo"
+      ],
+      "completeness": {
+        "timestamp": {
+          "null_count": 0,
+          "null_percentage": 0.0,
+          "completeness": 1.0
+        },
+        "maquina_id": {
+          "null_count": 0,
+          "null_percentage": 0.0,
+          "completeness": 1.0
+        },
+        "turno": {
+          "null_count": 0,
+          "null_percentage": 0.0,
+          "completeness": 1.0
+        },
+        "pecas_produzidas": {
+          "null_count": 0,
+          "null_percentage": 0.0,
+          "completeness": 1.0
+        },
+        "pecas_refugadas": {
+          "null_count": 0,
+          "null_percentage": 0.0,
+          "completeness": 1.0
+        },
+        "consumo_kwh": {
+          "null_count": 0,
+          "null_percentage": 0.0,
+          "completeness": 1.0
+        },
+        "status": {
+          "null_count": 0,
+          "null_percentage": 0.0,
+          "completeness": 1.0
+        },
+        "data": {
+          "null_count": 0,
+          "null_percentage": 0.0,
+          "completeness": 1.0
+        },
+        "taxa_refugo": {
+          "null_count": 2889,
+          "null_percentage": 16.48784385344139,
+          "completeness": 0.8351215614655861
+        }
+      },
+      "duplicates": {
+        "count": 0,
+        "percentage": 0.0
+      },
+      "outliers": {
+        "maquina_id": {
+          "iqr_method": 0,
+          "zscore_method": 0
+        },
+        "pecas_produzidas": {
+          "iqr_method": 2889,
+          "zscore_method": 0
+        },
+        "pecas_refugadas": {
+          "iqr_method": 0,
+          "zscore_method": 0
+        },
+        "consumo_kwh": {
+          "iqr_method": 2889,
+          "zscore_method": 0
+        },
+        "taxa_refugo": {
+          "iqr_method": 0,
+          "zscore_method": 0
+        }
+      },
+      "processing": {
+        "initial_records": 17522,
+        "final_records": 17522,
+        "removed_invalid": 0
+      }
+    },
+    {
+      "dataset": "eventos_silver",
+      "timestamp": "2025-11-25T19:31:40.684252",
+      "total_records": 200,
+      "columns": [
+        "id_evento",
+        "timestamp",
+        "id_maquina",
+        "descricao",
+        "severidade_texto",
+        "sistema_origem",
+        "severidade",
+        "data"
+      ],
+      "completeness": {
+        "id_evento": {
+          "null_count": 0,
+          "null_percentage": 0.0,
+          "completeness": 1.0
+        },
+        "timestamp": {
+          "null_count": 0,
+          "null_percentage": 0.0,
+          "completeness": 1.0
+        },
+        "id_maquina": {
+          "null_count": 0,
+          "null_percentage": 0.0,
+          "completeness": 1.0
+        },
+        "descricao": {
+          "null_count": 0,
+          "null_percentage": 0.0,
+          "completeness": 1.0
+        },
+        "severidade_texto": {
+          "null_count": 0,
+          "null_percentage": 0.0,
+          "completeness": 1.0
+        },
+        "sistema_origem": {
+          "null_count": 0,
+          "null_percentage": 0.0,
+          "completeness": 1.0
+        },
+        "severidade": {
+          "null_count": 0,
+          "null_percentage": 0.0,
+          "completeness": 1.0
+        },
+        "data": {
+          "null_count": 0,
+          "null_percentage": 0.0,
+          "completeness": 1.0
+        }
+      },
+      "duplicates": {
+        "count": 0,
+        "percentage": 0.0
+      },
+      "outliers": {
+        "id_maquina": {
+          "iqr_method": 0,
+          "zscore_method": 0
+        },
+        "severidade": {
+          "iqr_method": 0,
+          "zscore_method": 0
+        }
+      }
+    }
+  ]
+}
