@@ -22,7 +22,7 @@
 - [Módulos do Dashboard](#-módulos-do-dashboard)
 - [Métricas de ML](#-métricas-de-ml)
 - [Sistema de Alertas](#-sistema-de-alertas)
-- [Contribuindo](#-contribuindo)
+
 
 ---
 
@@ -481,19 +481,6 @@ pytest tests/test_alerts.py -v
 - [ ] Modelo de previsão de demanda
 - [ ] Integração com ERP/MES
 
----
-
-## 🤝 Contribuindo
-
-Contribuições são bem-vindas! Por favor:
-
-1. Fork o projeto
-2. Crie uma branch (`git checkout -b feature/NovaFuncionalidade`)
-3. Commit suas mudanças (`git commit -m 'Adiciona nova funcionalidade'`)
-4. Push para a branch (`git push origin feature/NovaFuncionalidade`)
-5. Abra um Pull Request
-
----
 
 ## 📄 Licença
 
