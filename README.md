@@ -133,12 +133,12 @@ graph TB
 
 ### 2️⃣ **Engenharia de Dados Profissional (DataOps)**
 
-- **Validação de Schema**: Checks automáticos de estrutura
+- **Validação de Schema**: Checks automáticos de estrutura (implementado via `pytest` e validações customizadas)
 - **Detecção de Outliers**: IQR + Z-Score
-- **Parquet Particionado**: Escalabilidade para Big Data
-- **Métricas de Qualidade**: Relatórios JSON detalhados
-- **Logging Estruturado**: Rastreabilidade completa
-- **Contextualização ISA-95**: Aplicação da hierarquia industrial (Empresa → Equipamento)
+- **Parquet Particionado**: Escalabilidade para Big Data (particionado por data)
+- **Métricas de Qualidade**: Relatórios JSON detalhados (gerados após cada execução do ETL)
+- **Logging Estruturado**: Rastreabilidade completa (implementado via Python `logging` para console e arquivo)
+- **Contextualização ISA-95**: Aplicação da hierarquia industrial (Empresa → Equipamento), com testes de integridade no pipeline.
 
 ### 3️⃣ **Sistema de Alertas com Observabilidade**
 
@@ -385,29 +385,28 @@ fabrica-projetosenai/
 
 ### Relatório de Treinamento
 
-```json
-{
-  "performance": {
-    "test_accuracy": 0.9812,
-    "precision": 0.9654,
-    "recall": 0.9723,
-    "f1_score": 0.9688,
-    "roc_auc": 0.9891
-  },
-  "confusion_matrix": {
-    "true_negative": 8542,
-    "false_positive": 143,
-    "false_negative": 89,
-    "true_positive": 3226
-  },
-  "feature_importance": {
-    "pressao_mpa": 0.4234,
-    "temp_matriz_c": 0.2801,
-    "umidade_pct": 0.1987,
-    "ciclo_tempo_s": 0.0978
-  }
-}
-```
+O modelo de Machine Learning (Random Forest) demonstrou alta performance e robustez, com as seguintes métricas:
+
+| Métrica | Valor | Descrição |
+| :--- | :--- | :--- |
+| **Acurácia** | 98.12% | Taxa de acertos geral do modelo. |
+| **Precision** | 96.54% | Dos previstos como defeito, quantos realmente foram. |
+| **Recall** | 97.23% | Dos defeitos reais, quantos o modelo conseguiu detectar. |
+| **F1-Score** | 96.88% | Média harmônica entre Precision e Recall. |
+| **ROC-AUC** | 0.9891 | Excelente capacidade de discriminação entre classes. |
+
+**Matriz de Confusão (Dados de Teste):**
+- **Verdadeiros Positivos (TP):** 3226
+- **Verdadeiros Negativos (TN):** 8542
+- **Falsos Positivos (FP):** 143 (Alerta desnecessário)
+- **Falsos Negativos (FN):** 89 (Defeito não detectado - *foco de melhoria*)
+
+**Variáveis mais importantes** (Feature Importance):
+1. 🥇 Pressão (MPa) - 42.34%
+2. 🥈 Temperatura (°C) - 28.01%
+3. 🥉 Umidade (%) - 19.87%
+4. 🏅 Ciclo (s) - 9.78%
+
 
 ### Visualizações Geradas
 
@@ -437,23 +436,6 @@ alerts:
     whatsapp: ["+55 81 99999-9999"]
 ```
 
-### Exemplo de Alerta
-
-```json
-{
-  "alert_id": "ALT-20241125-3421",
-  "severity": "CRITICAL",
-  "maquina_id": "Prensa 02",
-  "metric": "pressao_mpa",
-  "value": 17.2,
-  "message": "⚠️ LIMITE DE SEGURANÇA VIOLADO",
-  "control_limits": {
-    "ucl": 16.0,
-    "lcl": 10.0,
-    "mean": 13.5
-  }
-}
-```
 
 ---
 
